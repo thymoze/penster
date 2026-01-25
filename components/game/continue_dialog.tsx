@@ -18,6 +18,7 @@ export default function ContinueDialog() {
 
   const abortGame = useCallback(() => {
     cookieStore.delete("penster_playlist_id");
+    localStorage.clear();
     setPlaylist(undefined);
   }, []);
 
@@ -28,7 +29,7 @@ export default function ContinueDialog() {
         try {
           const pl = await getPlaylist(playlistId);
           setPlaylist(pl);
-        } catch (_e) {
+        } catch {
           abortGame();
         }
       }

@@ -6,7 +6,7 @@ import type { SimplifiedPlaylistsResponse } from "@/lib/spotify/types";
 import { Playlists } from "./playlists";
 
 async function loadMyPlaylists(
-  offset: number
+  offset: number,
 ): Promise<Result<SimplifiedPlaylistsResponse>> {
   "use server";
 

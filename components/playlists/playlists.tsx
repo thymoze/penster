@@ -33,7 +33,7 @@ export function Playlists({
         },
       };
     },
-    playlists
+    playlists,
   );
 
   if (!displayedPlaylists.success) {
@@ -53,42 +53,40 @@ export function Playlists({
   }
 
   return (
-    <div className="grid auto-rows-fr grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
+    <div className="grid auto-rows-fr grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 -mx-2 sm:-mx-3">
       {displayedPlaylists.data.items.map((playlist, index) =>
         length < total && length % step === 0 && index === length - 1 ? (
           <Fragment key={`hidden_${playlist.id}`}></Fragment>
         ) : (
-          <Button
-            asChild
-            key={playlist.id}
-            variant="outline"
-            className="h-full p-2 sm:p-3 flex flex-col items-center justify-start gap-2"
-          >
-            <Link href={`/play?playlistId=${playlist.id}`}>
+          <div key={playlist.id}>
+            <Link
+              href={`/play?playlistId=${playlist.id}`}
+              className="p-2 sm:p-3 flex flex-col items-start justify-start gap-2 rounded-md hover:bg-muted"
+            >
               <img
                 src={playlist.images[0]?.url}
                 alt={playlist.name}
                 className="w-full aspect-square object-cover rounded-md"
               />
-              <h2 className="w-full text-center text-foreground whitespace-normal line-clamp-2 text-ellipsis text-sm sm:text-base">
+              <h2 className="max-w-full text-foreground wrap-break-word line-clamp-2 text-ellipsis text-sm sm:text-base hover:underline">
                 {playlist.name}
               </h2>
             </Link>
-          </Button>
-        )
+          </div>
+        ),
       )}
       {length < total && (
         <form action={formAction} className="contents">
           <Button
-            variant="outline"
-            className="h-full flex flex-col gap-2 text-foreground/70 text-center text-sm sm:text-base"
+            variant="ghost"
+            className="h-full flex flex-col gap-2 text-muted-foreground text-sm sm:text-base"
           >
             {!isPending ? (
               <CirclePlusIcon className="size-8" />
             ) : (
               <Spinner className="size-8" />
             )}
-            Mehr anzeigen
+            <span className="hover:underline">Mehr anzeigen</span>
           </Button>
         </form>
       )}

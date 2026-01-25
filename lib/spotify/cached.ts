@@ -14,9 +14,8 @@ const ttl = 6 * 60 * 60 * 1000; // 6 hours
 const cache = new Keyv({ namespace: "spotify-cache", ttl });
 
 export const getHitsterPlaylists = async () => {
-  const cache_result = await cache.get<SimplifiedPlaylist[]>(
-    "hitster_playlists"
-  );
+  const cache_result =
+    await cache.get<SimplifiedPlaylist[]>("hitster_playlists");
   if (cache_result) {
     return cache_result;
   }
@@ -68,7 +67,7 @@ export const getPlaylist = async (playlistId: string) => {
     ...new Map(
       result.data.tracks.items
         .filter((item) => item.track.is_playable && !item.track.is_local)
-        .map((item) => [item.track.id, item])
+        .map((item) => [item.track.id, item]),
     ).values(),
   ];
 
@@ -79,7 +78,7 @@ export const getPlaylist = async (playlistId: string) => {
 
 export const getCompletePlaylist = async (playlistId: string) => {
   const cache_result = await cache.get<Playlist>(
-    `complete_playlist_${playlistId}`
+    `complete_playlist_${playlistId}`,
   );
   if (cache_result) {
     return cache_result;
@@ -104,7 +103,7 @@ export const getCompletePlaylist = async (playlistId: string) => {
     ...new Map(
       playlist.tracks.items
         .filter((item) => item.track.is_playable && !item.track.is_local)
-        .map((item) => [item.track.id, item])
+        .map((item) => [item.track.id, item]),
     ).values(),
   ];
   playlist.tracks.total = playlist.tracks.items.length;

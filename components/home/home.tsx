@@ -1,25 +1,26 @@
 "use client";
 
-import React, {
+import { InfoIcon, SearchIcon, XIcon } from "lucide-react";
+import {
   startTransition,
   useActionState,
   useCallback,
+  useDeferredValue,
   useEffect,
   useState,
 } from "react";
-import { InfoIcon, SearchIcon, XIcon } from "lucide-react";
+import type { Result } from "@/lib";
+import type { Page } from "@/lib/spotify/api";
+import type { SimplifiedPlaylistsResponse } from "@/lib/spotify/types";
+import { Playlists } from "../playlists/playlists";
+import { Alert, AlertDescription } from "../ui/alert";
 import {
   InputGroup,
-  InputGroupInput,
   InputGroupAddon,
   InputGroupButton,
+  InputGroupInput,
 } from "../ui/input-group";
 import { Spinner } from "../ui/spinner";
-import { Playlists } from "../playlists/playlists";
-import { Result } from "@/lib";
-import { SimplifiedPlaylistsResponse } from "@/lib/spotify/types";
-import { Page } from "@/lib/spotify/api";
-import { Alert, AlertDescription } from "../ui/alert";
 
 const DEFAULT_SEARCH_RESULT: Result<SimplifiedPlaylistsResponse> = {
   success: true,
@@ -35,7 +36,7 @@ export default function Home({
   playlists: React.ReactNode;
   searchAction: (
     query: string,
-    page?: Page
+    page?: Page,
   ) => Promise<Result<SimplifiedPlaylistsResponse>>;
 }) {
   const [query, setQuery] = useState("");
@@ -46,12 +47,14 @@ export default function Home({
       query === ""
         ? DEFAULT_SEARCH_RESULT
         : searchAction(query, { offset: 0, limit: 24 }),
-    DEFAULT_SEARCH_RESULT
+    DEFAULT_SEARCH_RESULT,
   );
 
-  const loadMore = useCallback(
-    async (offset: number) => searchAction(query, { offset, limit: 24 }),
-    [query, searchAction]
+  const loadMore = useDeferredValue(
+    useCallback(
+      async (offset: number) => searchAction(query, { offset, limit: 24 }),
+      [query, searchAction],
+    ),
   );
 
   useEffect(() => {
@@ -71,7 +74,7 @@ export default function Home({
   }, [query, search]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <header className="w-full p-4 border-b border-b-muted">
         <div className="max-w-7xl mx-auto grid grid-cols-[1fr_auto] md:grid-cols-[1fr_minmax(0,3fr)_1fr] place-items-center gap-4">
           <div className="hidden md:block"></div>
@@ -107,29 +110,31 @@ export default function Home({
           {profile}
         </div>
       </header>
-      <main className="max-w-7xl mx-auto w-full flex-1 p-4 pb-12">
-        {query !== "" && !debouncedIsEmpty ? (
-          isSearching ? (
-            <div className="flex justify-center py-16">
-              <Spinner className="size-16" />
-            </div>
+      <div className="flex-1 bg-card rounded-md">
+        <main className="max-w-7xl mx-auto w-full p-4">
+          {query !== "" && !debouncedIsEmpty ? (
+            isSearching ? (
+              <div className="flex justify-center py-16">
+                <Spinner className="size-16" />
+              </div>
+            ) : (
+              <>
+                <Alert className="w-fit mx-auto mb-4">
+                  <InfoIcon />
+                  <AlertDescription>
+                    Empfehlungen und offizielle Spotify-Playlists können nicht
+                    angezeigt werden. Diese müssen vorher in eine User-Playlist
+                    kopiert werden.
+                  </AlertDescription>
+                </Alert>
+                <Playlists playlists={searchResults} loadMore={loadMore} />
+              </>
+            )
           ) : (
-            <>
-              <Alert className="w-fit mx-auto mb-4">
-                <InfoIcon />
-                <AlertDescription>
-                  Empfehlungen und offizielle Spotify-Playlists können nicht
-                  angezeigt werden. Diese müssen vorher in eine User-Playlist
-                  kopiert werden.
-                </AlertDescription>
-              </Alert>
-              <Playlists playlists={searchResults} loadMore={loadMore} />
-            </>
-          )
-        ) : (
-          playlists
-        )}
-      </main>
+            playlists
+          )}
+        </main>
+      </div>
     </div>
   );
 }

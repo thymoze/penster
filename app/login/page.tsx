@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { config } from "@/lib/config";
 import { SPOTIFY_SCOPES, SPOTIFY_STATE_COOKIE } from "@/lib/spotify/auth";
 
 export default async function Login({ searchParams }: PageProps<"/login">) {
@@ -14,9 +15,9 @@ export default async function Login({ searchParams }: PageProps<"/login">) {
 
     const params = new URLSearchParams({
       response_type: "code",
-      client_id: process.env.SPOTIFY_CLIENT_ID!,
+      client_id: config.spotifyClientId,
       scope: SPOTIFY_SCOPES,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI!,
+      redirect_uri: config.spotifyRedirectUri,
       state,
     });
 
@@ -28,7 +29,7 @@ export default async function Login({ searchParams }: PageProps<"/login">) {
   return (
     <form
       action={redirectToSpotify}
-      className="flex flex-col items-center min-h-screen justify-center"
+      className="flex flex-col items-center min-h-dvh justify-center"
     >
       <Button
         size="lg"

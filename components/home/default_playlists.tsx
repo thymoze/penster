@@ -5,11 +5,11 @@ export default function DefaultPlaylists() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-lg font-semibold">Meine Playlists</h1>
+        <h1 className="text-xl font-bold">Meine Playlists</h1>
         <MyPlaylists />
       </div>
       <div className="space-y-2">
-        <h1 className="text-lg font-semibold">Hitster Playlists</h1>
+        <h1 className="text-xl font-bold">Hitster Playlists</h1>
         <HitsterPlaylists />
       </div>
     </div>

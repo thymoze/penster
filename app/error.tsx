@@ -4,7 +4,7 @@ import { RotateCcwIcon } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset: _,
 }: {
@@ -16,7 +16,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
+    <div className="flex flex-col items-center justify-center min-h-dvh space-y-4">
       <h2>Etwas ist schiefgelaufen!</h2>
       <Button
         onClick={() => {

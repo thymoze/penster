@@ -4,19 +4,22 @@ import type { TokenResponse } from "./spotify/types";
 
 export const SESSION_COOKIE = "penster_session";
 export const Session = z.object({
-  access_token: z.string(),
+  accessToken: z.string(),
+  refreshToken: z.string(),
   expiry: z.number(),
-  refresh_token: z.string(),
 });
 export type Session = z.infer<typeof Session>;
 
-export async function createSession(tokenData: TokenResponse) {
-  "use server";
-  const session: Session = {
-    access_token: tokenData.access_token,
-    refresh_token: tokenData.refresh_token,
+export function createSession(tokenData: TokenResponse): Session {
+  return {
+    accessToken: tokenData.access_token,
+    refreshToken: tokenData.refresh_token,
     expiry: Date.now() + tokenData.expires_in * 1000,
   };
+}
+
+export async function setSession(session: Session) {
+  "use server";
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, JSON.stringify(session));
 }

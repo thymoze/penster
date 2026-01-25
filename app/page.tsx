@@ -1,16 +1,16 @@
 import { Suspense } from "react";
 import ContinueDialog from "@/components/game/continue_dialog";
-import { Page, spotifyClient } from "@/lib/spotify/api";
-import { getPlaylist } from "@/lib/spotify/cached";
-import type { SimplifiedPlaylistsResponse } from "@/lib/spotify/types";
-import { Result } from "@/lib";
+import DefaultPlaylists from "@/components/home/default_playlists";
 import Home from "@/components/home/home";
 import Profile from "@/components/home/profile";
-import DefaultPlaylists from "@/components/home/default_playlists";
+import type { Result } from "@/lib";
+import { type Page, spotifyClient } from "@/lib/spotify/api";
+import { getPlaylist } from "@/lib/spotify/cached";
+import type { SimplifiedPlaylistsResponse } from "@/lib/spotify/types";
 
 async function searchAction(
   query: string,
-  page?: Page
+  page?: Page,
 ): Promise<Result<SimplifiedPlaylistsResponse>> {
   "use server";
   const spotify = await spotifyClient();

@@ -1,14 +1,16 @@
 import { cache } from "react";
-import z from "zod";
+import type z from "zod";
+import { config } from "@/lib/config";
 import type { Result } from "..";
-import { getSession } from "../session";
+import { createSession, getSession, type Session } from "../session";
 import {
   Devices,
+  PlaybackState,
   Playlist,
   Profile,
   RefreshTokenResponse,
   SearchPlaylistResponse,
-  SimplifiedPlaylist,
+  type SimplifiedPlaylist,
   SimplifiedPlaylistsResponse,
   TokenResponse,
   TracksResponse,
@@ -22,32 +24,31 @@ export const spotifyClient = cache(async (): Promise<SpotifyApiClient> => {
   if (!session) {
     throw new Error("No valid session");
   }
-  return new SpotifyApiClient(
-    session.access_token,
-    session.refresh_token,
-    session.expiry,
-    async (_token) => {
-      // await createSession(token);
-    }
-  );
+  return new SpotifyApiClient(session);
 });
 
 export class SpotifyApiClient {
   private readonly apiBaseUrl = "https://api.spotify.com/v1";
 
-  constructor(
-    private accessToken: string,
-    private refreshToken: string,
-    private expiry: number,
-    private onTokenRefresh: (token: TokenResponse) => void
-  ) {
-    this.expiry = expiry - 5 * 60 * 1000; // 5 min buffer
+  private accessToken: string;
+  private refreshToken: string;
+  private expiry: number;
+
+  constructor(session: Session) {
+    this.accessToken = session.accessToken;
+    this.refreshToken = session.refreshToken;
+    this.expiry = session.expiry;
   }
 
-  static async withAuthorizationCode(
-    code: string,
-    onTokenRefresh: (token: TokenResponse) => void
-  ): Promise<Result<SpotifyApiClient>> {
+  get session(): Session {
+    return {
+      accessToken: this.accessToken,
+      refreshToken: this.refreshToken,
+      expiry: this.expiry,
+    };
+  }
+
+  static async authorizationCode(code: string): Promise<Result<Session>> {
     const tokenData = await SpotifyApiClient.tokenRequest({
       grant_type: "authorization_code",
       code: code,
@@ -55,61 +56,43 @@ export class SpotifyApiClient {
     if (!tokenData.success) {
       return { success: false, error: tokenData.error };
     }
-    const client = new SpotifyApiClient(
-      tokenData.data.access_token,
-      tokenData.data.refresh_token,
-      Date.now() + tokenData.data.expires_in * 1000,
-      onTokenRefresh
-    );
-    onTokenRefresh(tokenData.data);
-    return { success: true, data: client };
+    return { success: true, data: createSession(tokenData.data) };
   }
 
   private async apiRequest<T>(
     endpoint: string,
-    schema: z.ZodSchema<T>,
-    options: RequestInit = {}
+    schema: z.ZodSchema<T> | null,
+    options: RequestInit = {},
   ): Promise<Result<T>> {
-    let retry = true;
-
-    if (Date.now() >= this.expiry) {
-      const refreshResult = await this.refreshTokens();
-      if (refreshResult.success) {
-        retry = false;
-      }
+    const url = `${this.apiBaseUrl}${endpoint}`;
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        ...options.headers,
+      },
+    });
+    if (!response.ok) {
+      console.error(
+        `Spotify API request failed: ${response.status} ${response.statusText}`,
+      );
+      return {
+        success: false,
+        error: `Failed to ${options.method || "GET"} ${endpoint}`,
+      };
     }
 
-    let response: Response;
-    do {
-      const url = `${this.apiBaseUrl}${endpoint}`;
-      response = await fetch(url, {
-        ...options,
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          ...options.headers,
-        },
-      });
-      if (response.ok) {
-        break;
-      }
-
-      if (retry && response.status === 401) {
-        const refreshResult = await this.refreshTokens();
-        if (!refreshResult.success) {
-          return refreshResult;
-        }
-        retry = false;
-      } else {
-        return {
-          success: false,
-          error: `Failed to ${options.method || "GET"} ${endpoint}`,
-        };
-      }
-    } while (retry);
+    if (schema === null) {
+      return { success: true, data: null as T };
+    }
 
     const json = await response.json();
     const parseResult = schema.safeParse(json);
     if (!parseResult.success) {
+      console.error(
+        `Spotify API response parsing failed for ${endpoint}:`,
+        parseResult.error,
+      );
       return {
         success: false,
         error: `Invalid response from ${endpoint}:\n${parseResult.error.message}`,
@@ -122,7 +105,7 @@ export class SpotifyApiClient {
   private static async tokenRequest(
     params:
       | { grant_type: "authorization_code"; code: string }
-      | { grant_type: "refresh_token"; refresh_token: string }
+      | { grant_type: "refresh_token"; refresh_token: string },
   ): Promise<Result<TokenResponse>> {
     const tokenResponse = await fetch(
       "https://accounts.spotify.com/api/token",
@@ -133,16 +116,16 @@ export class SpotifyApiClient {
           Authorization:
             "Basic " +
             Buffer.from(
-              `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+              `${config.spotifyClientId}:${config.spotifyClientSecret}`,
             ).toString("base64"),
         },
         body: new URLSearchParams({
           ...params,
           ...(params.grant_type === "authorization_code"
-            ? { redirect_uri: process.env.SPOTIFY_REDIRECT_URI }
+            ? { redirect_uri: config.spotifyRedirectUri }
             : {}),
         }),
-      }
+      },
     );
 
     if (!tokenResponse.ok) {
@@ -164,12 +147,8 @@ export class SpotifyApiClient {
     return { success: true, data: tokenData.data };
   }
 
-  async isTokenValid(): Promise<boolean> {
-    if (Date.now() >= this.expiry) {
-      const refreshResult = await this.refreshTokens();
-      return refreshResult.success;
-    }
-    return true;
+  isTokenExpired(): boolean {
+    return Date.now() >= this.expiry;
   }
 
   async refreshTokens(): Promise<Result<TokenResponse>> {
@@ -183,8 +162,7 @@ export class SpotifyApiClient {
 
     this.accessToken = refreshResult.data.access_token;
     this.refreshToken = refreshResult.data.refresh_token;
-    this.expiry = Date.now() + (refreshResult.data.expires_in - 5 * 60) * 1000;
-    this.onTokenRefresh(refreshResult.data);
+    this.expiry = Date.now() + refreshResult.data.expires_in * 1000;
     return { success: true, data: refreshResult.data };
   }
 
@@ -193,7 +171,7 @@ export class SpotifyApiClient {
   }
 
   async getMyPlaylists(
-    page: Page = DEFAULT_PAGE
+    page: Page = DEFAULT_PAGE,
   ): Promise<Result<SimplifiedPlaylistsResponse>> {
     const { offset, limit } = { ...DEFAULT_PAGE, ...page };
     const params = new URLSearchParams({
@@ -202,13 +180,13 @@ export class SpotifyApiClient {
     });
     return this.apiRequest(
       `/me/playlists?${params}`,
-      SimplifiedPlaylistsResponse
+      SimplifiedPlaylistsResponse,
     );
   }
 
   async getUserPlaylists(
     userId: string,
-    page: Page = DEFAULT_PAGE
+    page: Page = DEFAULT_PAGE,
   ): Promise<Result<SimplifiedPlaylistsResponse>> {
     const { offset, limit } = { ...DEFAULT_PAGE, ...page };
     const params = new URLSearchParams({
@@ -217,7 +195,7 @@ export class SpotifyApiClient {
     });
     return this.apiRequest(
       `/users/${userId}/playlists?${params}`,
-      SimplifiedPlaylistsResponse
+      SimplifiedPlaylistsResponse,
     );
   }
 
@@ -233,7 +211,7 @@ export class SpotifyApiClient {
 
   async getPlaylistTracks(
     playlistId: string,
-    page: Page = DEFAULT_PAGE
+    page: Page = DEFAULT_PAGE,
   ): Promise<Result<TracksResponse>> {
     const { offset, limit } = { ...DEFAULT_PAGE, ...page };
     const params = new URLSearchParams({
@@ -243,7 +221,7 @@ export class SpotifyApiClient {
     });
     return this.apiRequest(
       `/playlists/${playlistId}/tracks?${params}`,
-      TracksResponse
+      TracksResponse,
     );
   }
 
@@ -251,22 +229,46 @@ export class SpotifyApiClient {
     return this.apiRequest("/me/player/devices", Devices);
   }
 
-  async playTrack(trackId: string): Promise<Result<null>> {
-    const response = await this.apiRequest(`/me/player/play`, z.any(), {
+  async setDevice(deviceId: string): Promise<Result<null>> {
+    const response = await this.apiRequest(`/me/player`, null, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        uris: [`spotify:track:${trackId}`],
+        device_ids: [deviceId],
       }),
+    });
+    return response.success ? { success: true, data: null } : response;
+  }
+
+  async playbackState(): Promise<Result<PlaybackState>> {
+    return this.apiRequest("/me/player", PlaybackState);
+  }
+
+  async play(trackId?: string): Promise<Result<null>> {
+    const response = await this.apiRequest(`/me/player/play`, null, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        uris: trackId ? [`spotify:track:${trackId}`] : undefined,
+      }),
+    });
+    return response.success ? { success: true, data: null } : response;
+  }
+
+  async pause(): Promise<Result<null>> {
+    const response = await this.apiRequest(`/me/player/pause`, null, {
+      method: "PUT",
     });
     return response.success ? { success: true, data: null } : response;
   }
 
   async searchPlaylist(
     query: string,
-    page: Page = DEFAULT_PAGE
+    page: Page = DEFAULT_PAGE,
   ): Promise<Result<SimplifiedPlaylistsResponse>> {
     const { offset, limit } = { ...DEFAULT_PAGE, ...page };
     const params = new URLSearchParams({
@@ -277,7 +279,7 @@ export class SpotifyApiClient {
     });
     const result = await this.apiRequest(
       `/search?${params}`,
-      SearchPlaylistResponse
+      SearchPlaylistResponse,
     );
     if (!result.success) {
       return result;
@@ -287,7 +289,7 @@ export class SpotifyApiClient {
       data: {
         ...result.data.playlists,
         items: result.data.playlists.items.filter(
-          (i): i is SimplifiedPlaylist => i !== null
+          (i): i is SimplifiedPlaylist => i !== null,
         ),
       },
     };

@@ -40,7 +40,7 @@ export async function HitsterPlaylists() {
       ...hitsterPlaylists.data,
       items: hitsterPlaylists.data.items.slice(
         0,
-        HITSTER_DE_PLAYLIST_IDS.length
+        HITSTER_DE_PLAYLIST_IDS.length,
       ),
     },
   };

@@ -97,3 +97,10 @@ export const Devices = z.object({
   ),
 });
 export type Devices = z.infer<typeof Devices>;
+
+export const PlaybackState = z.object({
+  is_playing: z.boolean(),
+  progress_ms: z.number().nullable(),
+  item: Track.nullable(),
+});
+export type PlaybackState = z.infer<typeof PlaybackState>;

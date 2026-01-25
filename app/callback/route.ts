@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
-import { createSession } from "@/lib/session";
+import { setSession } from "@/lib/session";
 import { SpotifyApiClient } from "@/lib/spotify/api";
 import { SPOTIFY_STATE_COOKIE } from "@/lib/spotify/auth";
 
@@ -13,20 +13,20 @@ export const GET = async (request: NextRequest) => {
   const storedState = cookieStore.get(SPOTIFY_STATE_COOKIE)?.value;
   cookieStore.delete(SPOTIFY_STATE_COOKIE);
 
+  if (!code) {
+    return redirect("/login?error=no_code");
+  }
   if (state === null || state !== storedState) {
     return redirect("/login?error=state_mismatch");
   }
 
-  const spotify = await SpotifyApiClient.withAuthorizationCode(
-    code ?? "",
-    (token) => {
-      createSession(token);
-    },
-  );
+  const session = await SpotifyApiClient.authorizationCode(code);
 
-  if (!spotify.success) {
+  if (!session.success) {
     return redirect("/login?error=no_token");
   }
+
+  await setSession(session.data);
 
   return redirect("/");
 };
