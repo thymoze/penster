@@ -3,6 +3,8 @@
 import {
   EllipsisVerticalIcon,
   LaptopIcon,
+  Maximize2Icon,
+  Minimize2Icon,
   MonitorIcon,
   RadioReceiverIcon,
   RotateCcwIcon,
@@ -10,7 +12,7 @@ import {
   SpeakerIcon,
   XIcon,
 } from "lucide-react";
-import { Suspense, use } from "react";
+import { Suspense, use, useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +38,27 @@ export function GameControls({
   restartGame: () => void;
   abortGame: () => void;
 }) {
+  const [fullscreen, setFullscreen] = useState(
+    () => document.fullscreenElement !== null
+  );
+
+  const openFullscreen = async () => {
+    await document.body.requestFullscreen();
+  };
+
+  const exitFullscreen = async () => {
+    document.exitFullscreen();
+  };
+
+  useEffect(() => {
+    const updateFullscreen = () =>
+      setFullscreen(document.fullscreenElement !== null);
+
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () =>
+      document.removeEventListener("fullscreenchange", updateFullscreen);
+  }, []);
+
   return (
     <>
       <DeviceDialog />
@@ -80,6 +103,18 @@ export function GameControls({
               Spiel beenden
             </DropdownMenuItem>
           </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          {fullscreen ? (
+            <DropdownMenuItem onClick={exitFullscreen}>
+              <Minimize2Icon className="size-4" />
+              Vollbild beenden
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onClick={openFullscreen}>
+              <Maximize2Icon className="size-4" />
+              Vollbild
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
@@ -99,9 +134,9 @@ function DeviceDialog() {
           {devices
             ?.filter(
               (
-                device,
+                device
               ): device is RequiredFields<Devices["devices"][number], "id"> =>
-                device.id !== null,
+                device.id !== null
             )
             .map((device) => (
               // biome-ignore lint/a11y/useSemanticElements: ...

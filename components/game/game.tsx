@@ -1,9 +1,9 @@
 "use client";
 
-import { act, startTransition, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import type { Playlist, Track } from "@/lib/spotify/types";
 
-import { GameControls } from "./game_controls";
+import { GameControls } from "./controls";
 import { GamePreview } from "./preview";
 import Player from "./player";
 import { getPlaylistTracks, pause, play } from "./actions";
@@ -24,14 +24,14 @@ export default function Game({
 
   const [remaining, setRemaining] = useLocalStorage<number[]>(
     `remaining_${initialPlaylist.id}`,
-    () => Array.from({ length: initialPlaylist.tracks.total }, (_, i) => i),
+    () => Array.from({ length: initialPlaylist.tracks.total }, (_, i) => i)
   );
 
   const [tracks, setTracks] = useState<(Track | undefined)[]>(() =>
     Object.assign(
       new Array(initialPlaylist.tracks.total),
-      initialPlaylist.tracks.items.map((item) => item.track),
-    ),
+      initialPlaylist.tracks.items.map((item) => item.track)
+    )
   );
 
   const nextIndex = (remainingIndices: number[]): number | undefined => {
@@ -45,7 +45,7 @@ export default function Game({
   };
 
   const nextTrack = async (
-    remainingIndices: number[],
+    remainingIndices: number[]
   ): Promise<Track | undefined> => {
     const trackIndex = nextIndex(remainingIndices);
     if (trackIndex === undefined) return undefined;
@@ -69,7 +69,7 @@ export default function Game({
     newTracks.splice(
       result.data.offset,
       result.data.items.length,
-      ...result.data.items.map((item) => item.track),
+      ...result.data.items.map((item) => item.track)
     );
     setTracks(newTracks);
     // biome-ignore lint/style/noNonNullAssertion: ...
@@ -91,6 +91,7 @@ export default function Game({
 
   const startGame = async () => {
     await cookieStore.set("penster_playlist_id", initialPlaylist.id);
+    await document.documentElement.requestFullscreen();
     setPlaying(true);
     await next();
   };
@@ -102,7 +103,7 @@ export default function Game({
     setActive(undefined);
     const rem = Array.from(
       { length: initialPlaylist.tracks.total },
-      (_, i) => i,
+      (_, i) => i
     );
     setRemaining(rem);
     setNextTrackPromise(nextTrack(rem));
@@ -113,6 +114,7 @@ export default function Game({
   }, [active]);
 
   const abortGame = async () => {
+    document.exitFullscreen();
     await pause();
     await cookieStore.delete("penster_playlist_id");
     localStorage.clear();
@@ -129,13 +131,13 @@ export default function Game({
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
         {playing ? (
           active !== undefined ? (
-            <div className="group size-48 sm:size-64 lg:size-80 relative perspective-distant">
+            <Wrapper>
               <Player
                 active={active}
                 nextTrack={next}
                 nextPromise={nextTrackPromise}
               />
-            </div>
+            </Wrapper>
           ) : (
             <>
               <p className="text-center px-4">Keine weiteren Songs im Spiel.</p>
@@ -152,14 +154,22 @@ export default function Game({
             </>
           )
         ) : (
-          <div className="group size-48 sm:size-64 lg:size-80 relative perspective-distant">
+          <Wrapper>
             <GamePreview
               initialPlaylist={initialPlaylist}
               startGame={startGame}
             />
-          </div>
+          </Wrapper>
         )}
       </div>
     </>
+  );
+}
+
+function Wrapper({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative group w-10/12 sm:size-96 aspect-square perspective-distant">
+      {children}
+    </div>
   );
 }
