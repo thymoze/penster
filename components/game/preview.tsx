@@ -60,10 +60,10 @@ export function GamePreview({
         <Card className="rotate-y-180" />
       </div>
 
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-8 flex flex-col items-center gap-4">
+      <div className="absolute w-full sm:w-[150%] top-full left-1/2 -translate-x-1/2 mt-8 flex flex-col items-center gap-4">
         <h2
           className={cn(
-            "text-2xl text-center font-semibold transition-opacity max-w-2xl wrap-break-word text-ellipsis line-clamp-3",
+            "text-2xl text-center font-semibold transition-opacity max-w-2xl wrap-anywhere text-ellipsis line-clamp-3",
             starting && "opacity-0 invisible",
           )}
         >

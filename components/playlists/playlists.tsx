@@ -68,7 +68,7 @@ export function Playlists({
                 alt={playlist.name}
                 className="w-full aspect-square object-cover rounded-md"
               />
-              <h2 className="max-w-full text-foreground wrap-break-word line-clamp-2 text-ellipsis text-sm sm:text-base hover:underline">
+              <h2 className="max-w-full text-foreground wrap-anywhere line-clamp-2 text-ellipsis text-sm sm:text-base hover:underline">
                 {playlist.name}
               </h2>
             </Link>

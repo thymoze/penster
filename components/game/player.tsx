@@ -99,13 +99,13 @@ export default function Player({
             background: `linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 60%) 25%, rgb(0 0 0 / 90%)), url(${active?.album.images[0]?.url}) no-repeat center/cover`,
           }}
         >
-          <span className="line-clamp-2 text-ellipsis wrap-break-word">
+          <span className="line-clamp-2 text-ellipsis wrap-anywhere">
             {active.name}
           </span>
           <h1 className="text-7xl font-bold leading-none">
             {new Date(active.album.release_date).getFullYear()}
           </h1>
-          <span className="line-clamp-2 text-ellipsis wrap-break-word">
+          <span className="line-clamp-2 text-ellipsis wrap-anywhere">
             {active.artists.map((artist) => artist.name).join(", ")}
           </span>
         </div>
