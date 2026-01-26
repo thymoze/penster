@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse, type ProxyConfig } from "next/server";
-import { clearSession, getSession, setSession } from "@/lib/session";
-import { spotifyClient } from "./lib/spotify/api";
+import { clearSession, getSession, updateSession } from "@/lib/session";
+import { spotifyClient } from "@/lib/spotify/api";
 
 export const config: ProxyConfig = {
   matcher: ["/((?!_next/|favicon.ico|callback).*)"],
@@ -29,12 +29,11 @@ export async function proxy(request: NextRequest) {
       if (!refreshResult.success) {
         throw new Error("Session expired");
       }
-      await setSession(client.session);
+      await updateSession(request, refreshResult.data);
     }
+    return NextResponse.next({ request });
   } catch {
     await clearSession();
     return NextResponse.redirect(new URL("/login", request.url));
   }
-
-  return NextResponse.next();
 }

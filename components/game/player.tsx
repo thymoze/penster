@@ -1,21 +1,16 @@
 "use client";
 
+import { CirclePauseIcon, CirclePlayIcon } from "lucide-react";
 import { Suspense, use, useEffect, useState } from "react";
+import {
+  getPlaybackState,
+  pause as pauseAction,
+  play as playAction,
+} from "@/lib/game/actions";
 import type { Track } from "@/lib/spotify/types";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Card } from "./card";
-import {
-  getPlaybackState,
-  play as playAction,
-  pause as pauseAction,
-} from "./actions";
-import {
-  CirclePauseIcon,
-  CirclePlayIcon,
-  PauseIcon,
-  PlayIcon,
-} from "lucide-react";
 
 export default function Player({
   active,
@@ -24,7 +19,7 @@ export default function Player({
 }: {
   active: Track;
   nextTrack: () => void;
-  nextPromise: Promise<unknown>;
+  nextPromise?: Promise<void>;
 }) {
   const [side, setSide] = useState<"front" | "back">("front");
   const [isPlaying, setIsPlaying] = useState(true);
@@ -51,21 +46,25 @@ export default function Player({
       setIsPlaying(result.data.is_playing);
     };
 
-    fn();
-    const interval = setInterval(fn, 1000);
+    const interval = setInterval(fn, 5000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <>
       <div
+        role="button"
+        tabIndex={0}
         key={active.id}
         className={cn(
           "relative size-full rounded-md shadow-lg duration-500 transform-3d transition-transform",
           side === "front" && "",
-          side === "back" && "-rotate-y-180"
+          side === "back" && "-rotate-y-180",
         )}
         onClick={togglePlay}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") togglePlay();
+        }}
       >
         {/* glow */}
         <div
@@ -73,13 +72,13 @@ export default function Player({
             "absolute top-1/2 left-1/2 -translate-1/2 size-[calc(100%+10px)] blur-xl rounded-md overflow-hidden transition-opacity duration-1000",
             "animate-in fade-in",
             side === "front" && "opacity-100",
-            side === "back" && "opacity-0"
+            side === "back" && "opacity-0",
           )}
         >
           <div
             className={cn(
               "absolute top-1/2 left-1/2 -translate-1/2 size-[200%] bg-conic-[#005f88,#998e00,#8a004b,#005f88] animate-[spin_4s_linear_infinite]",
-              !isPlaying && "paused"
+              !isPlaying && "paused",
             )}
           ></div>
         </div>
@@ -117,13 +116,16 @@ export default function Player({
           className="absolute top-full left-1/2 -translate-x-1/2 mt-8"
           size="lg"
           onClick={reveal}
+          autoFocus
         >
           Aufdecken
         </Button>
       ) : (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-8">
           <Suspense>
-            <NextButton nextPromise={nextPromise} onClick={next} />
+            {nextPromise && (
+              <NextButton nextPromise={nextPromise} onClick={next} />
+            )}
           </Suspense>
         </div>
       )}
@@ -135,13 +137,18 @@ function NextButton({
   nextPromise,
   onClick,
 }: {
-  nextPromise: Promise<unknown>;
+  nextPromise: Promise<void>;
   onClick: () => void;
 }) {
   use(nextPromise);
 
   return (
-    <Button size="lg" onClick={onClick} className="animate-in fade-in">
+    <Button
+      size="lg"
+      onClick={onClick}
+      className="animate-in fade-in"
+      autoFocus
+    >
       Nächster Song
     </Button>
   );

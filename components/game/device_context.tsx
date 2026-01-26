@@ -12,9 +12,9 @@ import {
   useState,
 } from "react";
 import type { Result } from "@/lib";
+import { getDevices, setDevice } from "@/lib/game/actions";
 import type { Devices } from "@/lib/spotify/types";
 import type { RequiredFields } from "@/lib/utils";
-import { getDevices, setDevice } from "./actions";
 
 export type DeviceContextType = {
   devices: Device[];

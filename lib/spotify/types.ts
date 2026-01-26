@@ -57,7 +57,10 @@ export const SearchPlaylistResponse = z.object({
 export type SearchPlaylistResponse = z.infer<typeof SearchPlaylistResponse>;
 
 export const Track = z.object({
-  id: z.string(),
+  id: z
+    .string()
+    .nullish()
+    .transform((val) => val ?? ""),
   name: z.string(),
   is_playable: z.boolean().default(true),
   is_local: z.boolean(),
@@ -68,7 +71,10 @@ export const Track = z.object({
   ),
   album: z.object({
     name: z.string(),
-    release_date: z.string(),
+    release_date: z
+      .string()
+      .nullish()
+      .transform((val) => val ?? ""),
     images: z.array(Image),
   }),
 });

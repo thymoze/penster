@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 import z from "zod";
 import type { TokenResponse } from "./spotify/types";
 
@@ -22,6 +23,14 @@ export async function setSession(session: Session) {
   "use server";
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, JSON.stringify(session));
+}
+
+export async function updateSession(request: NextRequest, session: Session) {
+  "use server";
+  const json = JSON.stringify(session);
+  const cookieStore = await cookies();
+  request.cookies.set(SESSION_COOKIE, json);
+  cookieStore.set(SESSION_COOKIE, json);
 }
 
 export async function getSession(): Promise<Session | null> {

@@ -38,9 +38,7 @@ export function GameControls({
   restartGame: () => void;
   abortGame: () => void;
 }) {
-  const [fullscreen, setFullscreen] = useState(
-    () => document.fullscreenElement !== null
-  );
+  const [fullscreen, setFullscreen] = useState(false);
 
   const openFullscreen = async () => {
     await document.body.requestFullscreen();
@@ -134,12 +132,11 @@ function DeviceDialog() {
           {devices
             ?.filter(
               (
-                device
+                device,
               ): device is RequiredFields<Devices["devices"][number], "id"> =>
-                device.id !== null
+                device.id !== null,
             )
             .map((device) => (
-              // biome-ignore lint/a11y/useSemanticElements: ...
               <Button
                 key={device.id}
                 variant="ghost"

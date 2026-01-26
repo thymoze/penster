@@ -76,38 +76,37 @@ export const getPlaylist = async (playlistId: string) => {
   return result.data;
 };
 
-export const getCompletePlaylist = async (playlistId: string) => {
-  const cache_result = await cache.get<Playlist>(
-    `complete_playlist_${playlistId}`,
-  );
-  if (cache_result) {
-    return cache_result;
-  }
+// export const getCompletePlaylist = async (playlistId: string) => {
+//   const cache_result = await cache.get<Playlist>(
+//     `complete_playlist_${playlistId}`,
+//   );
+//   if (cache_result) {
+//     return cache_result;
+//   }
 
-  const spotify = await spotifyClient();
-  const playlist = await getPlaylist(playlistId);
+//   const spotify = await spotifyClient();
+//   const playlist = await getPlaylist(playlistId);
 
-  let offset = playlist.tracks.items.length;
-  while (offset < playlist.tracks.total) {
-    const result = await spotify.getPlaylistTracks(playlistId, {
-      offset,
-      limit: 50,
-    });
-    if (!result.success) {
-      throw new Error(`Failed to fetch playlist tracks: ${result.error}`);
-    }
-    playlist.tracks.items.push(...result.data.items);
-    offset += result.data.items.length;
-  }
-  playlist.tracks.items = [
-    ...new Map(
-      playlist.tracks.items
-        .filter((item) => item.track.is_playable && !item.track.is_local)
-        .map((item) => [item.track.id, item]),
-    ).values(),
-  ];
-  playlist.tracks.total = playlist.tracks.items.length;
-  await cache.set(`complete_playlist_${playlistId}`, playlist);
-  console.log("returning complete playlist from spotify");
-  return playlist;
-};
+//   let offset = playlist.tracks.items.length;
+//   while (offset < playlist.tracks.total) {
+//     const result = await spotify.getPlaylistTracks(playlistId, {
+//       offset,
+//       limit: 50,
+//     });
+//     if (!result.success) {
+//       throw new Error(`Failed to fetch playlist tracks: ${result.error}`);
+//     }
+//     playlist.tracks.items.push(...result.data.items);
+//     offset += result.data.items.length;
+//   }
+//   playlist.tracks.items = [
+//     ...new Map(
+//       playlist.tracks.items
+//         .filter((item) => item.track.is_playable && !item.track.is_local)
+//         .map((item) => [item.track.id, item]),
+//     ).values(),
+//   ];
+//   playlist.tracks.total = playlist.tracks.items.length;
+//   await cache.set(`complete_playlist_${playlistId}`, playlist);
+//   return playlist;
+// };

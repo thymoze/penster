@@ -19,7 +19,8 @@ export function GamePreview({
     setStarting(
       () =>
         new Promise((resolve) =>
-          setTimeout(() => {
+          setTimeout(async () => {
+            await document.documentElement.requestFullscreen();
             startGame();
             resolve();
           }, 1200),

@@ -48,6 +48,12 @@ export class SpotifyApiClient {
     };
   }
 
+  set session(session: Session) {
+    this.accessToken = session.accessToken;
+    this.refreshToken = session.refreshToken;
+    this.expiry = session.expiry;
+  }
+
   static async authorizationCode(code: string): Promise<Result<Session>> {
     const tokenData = await SpotifyApiClient.tokenRequest({
       grant_type: "authorization_code",
@@ -148,10 +154,10 @@ export class SpotifyApiClient {
   }
 
   isTokenExpired(): boolean {
-    return Date.now() >= this.expiry;
+    return Date.now() >= this.expiry - 60 * 1000; // consider token expired 1 minute before actual expiry
   }
 
-  async refreshTokens(): Promise<Result<TokenResponse>> {
+  async refreshTokens(): Promise<Result<Session>> {
     const refreshResult = await SpotifyApiClient.tokenRequest({
       grant_type: "refresh_token",
       refresh_token: this.refreshToken,
@@ -160,10 +166,9 @@ export class SpotifyApiClient {
       return { success: false, error: "Failed to refresh token" };
     }
 
-    this.accessToken = refreshResult.data.access_token;
-    this.refreshToken = refreshResult.data.refresh_token;
-    this.expiry = Date.now() + refreshResult.data.expires_in * 1000;
-    return { success: true, data: refreshResult.data };
+    const session = createSession(refreshResult.data);
+    this.session = session;
+    return { success: true, data: session };
   }
 
   async getProfile(): Promise<Result<Profile>> {
