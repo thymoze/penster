@@ -343,7 +343,7 @@ function DeviceDialog() {
   const { devices, activeDevice, changeDevice } = use(DeviceContext);
 
   return (
-    <Dialog open={devices.length > 0 && !activeDevice}>
+    <Dialog open={!activeDevice}>
       <DialogContent className="sm:max-w-sm gap-4" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Wiedergabegerät</DialogTitle>
