@@ -7,20 +7,23 @@ import {
   pause as pauseAction,
   play as playAction,
 } from "@/lib/game/actions";
-import type { Track } from "@/lib/spotify/types";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Card } from "./card";
+import { DeviceContext } from "./device_context";
+import type { TrackWithDates } from "@/lib/game/logic";
 
 export default function Player({
   active,
   nextTrack,
   nextPromise,
 }: {
-  active: Track;
+  active: TrackWithDates;
   nextTrack: () => void;
   nextPromise?: Promise<void>;
 }) {
+  const { activeDevice } = use(DeviceContext);
+
   const [side, setSide] = useState<"front" | "back">("front");
   const [isPlaying, setIsPlaying] = useState(true);
 
@@ -40,6 +43,8 @@ export default function Player({
   };
 
   useEffect(() => {
+    if (!activeDevice) return;
+
     const fn = async () => {
       const result = await getPlaybackState();
       if (!result.success) return;
@@ -48,14 +53,14 @@ export default function Player({
 
     const interval = setInterval(fn, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeDevice]);
 
   return (
     <>
       <div
         role="button"
         tabIndex={0}
-        key={active.id}
+        key={active.track.id}
         className={cn(
           "relative size-full rounded-md shadow-lg duration-500 transform-3d transition-transform",
           side === "front" && "",
@@ -96,17 +101,17 @@ export default function Player({
         <div
           className="absolute size-full rounded-md backface-hidden -rotate-y-180 flex flex-col items-center justify-center text-center gap-2 p-4 md:p-8"
           style={{
-            background: `linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 60%) 25%, rgb(0 0 0 / 90%)), url(${active?.album.images[0]?.url}) no-repeat center/cover`,
+            background: `linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 60%) 25%, rgb(0 0 0 / 90%)), url(${active.track.album.images[0]?.url}) no-repeat center/cover`,
           }}
         >
           <span className="line-clamp-2 text-ellipsis wrap-anywhere">
-            {active.name}
+            {active.track.name}
           </span>
           <h1 className="text-7xl font-bold leading-none">
-            {new Date(active.album.release_date).getFullYear()}
+            {active.dates.recommendation}
           </h1>
           <span className="line-clamp-2 text-ellipsis wrap-anywhere">
-            {active.artists.map((artist) => artist.name).join(", ")}
+            {active.track.artists.map((artist) => artist.name).join(", ")}
           </span>
         </div>
       </div>

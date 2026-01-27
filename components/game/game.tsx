@@ -3,8 +3,8 @@
 import { RotateCcwIcon, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { pause, play } from "@/lib/game/actions";
-import { GameLogic } from "@/lib/game/logic";
+import { pause, play, trackDates } from "@/lib/game/actions";
+import { GameLogic, TrackWithDates } from "@/lib/game/logic";
 import type { Playlist, Track } from "@/lib/spotify/types";
 import type { RequiredFields } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -24,9 +24,7 @@ export default function Game({
   gameLogic.current ??= new GameLogic(initialPlaylist);
 
   const [playing, setPlaying] = useState(false);
-  const [active, setActive] = useState<RequiredFields<Track, "id"> | undefined>(
-    undefined,
-  );
+  const [active, setActive] = useState<TrackWithDates | undefined>(undefined);
 
   const [prefetchPromise, setPrefetchPromise] = useState<
     Promise<void> | undefined
@@ -60,21 +58,25 @@ export default function Game({
 
   const nextTrack = async () => {
     await prefetchPromise;
-    const track = await gameLogic.current.next();
+    const track = await gameLogic.current.nextTrack();
     setActive(track);
   };
 
   useEffect(() => {
     setPrefetchPromise(gameLogic.current.prefetchNext());
-    if (active !== undefined) {
-      play(active.id);
-    }
+    const fn = async () => {
+      if (active !== undefined) {
+        play(active.track.id);
+      }
+    };
+    fn();
   }, [active]);
 
   return (
     <>
       <GameControls
         initialPlaylist={initialPlaylist}
+        active={active}
         restartGame={restartGame}
         abortGame={abortGame}
       />

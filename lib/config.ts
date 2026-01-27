@@ -10,4 +10,7 @@ export const config = {
   spotifyClientId: getEnvironmentVariable("SPOTIFY_CLIENT_ID"),
   spotifyClientSecret: getEnvironmentVariable("SPOTIFY_CLIENT_SECRET"),
   spotifyRedirectUri: getEnvironmentVariable("SPOTIFY_REDIRECT_URI"),
+  discogsKey: getEnvironmentVariable("DISCOGS_KEY"),
+  discogsSecret: getEnvironmentVariable("DISCOGS_SECRET"),
+  userAgent: "Penster/1.0 (david@thymoze.com)",
 };

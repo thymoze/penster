@@ -1,13 +1,16 @@
 "use client";
 
 import {
+  CalendarX2Icon,
   EllipsisVerticalIcon,
   LaptopIcon,
   Maximize2Icon,
   Minimize2Icon,
   MonitorIcon,
+  MusicIcon,
   RadioReceiverIcon,
   RotateCcwIcon,
+  SearchIcon,
   SmartphoneIcon,
   SpeakerIcon,
   XIcon,
@@ -25,20 +28,31 @@ import {
 import type { Devices, Playlist } from "@/lib/spotify/types";
 import type { RequiredFields } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
 import { Spinner } from "../ui/spinner";
 import { type Device, DeviceContext } from "./device_context";
+import type { TrackWithDates } from "@/lib/game/logic";
+import Link from "next/link";
 
 export function GameControls({
   initialPlaylist,
+  active,
   restartGame,
   abortGame,
 }: {
   initialPlaylist: Playlist;
+  active?: TrackWithDates;
   restartGame: () => void;
   abortGame: () => void;
 }) {
   const [fullscreen, setFullscreen] = useState(false);
+  const [dateDialogOpen, setDateDialogOpen] = useState(false);
 
   const openFullscreen = async () => {
     await document.body.requestFullscreen();
@@ -60,6 +74,13 @@ export function GameControls({
   return (
     <>
       <DeviceDialog />
+      {active && (
+        <DateDialog
+          open={dateDialogOpen}
+          onOpenChange={setDateDialogOpen}
+          track={active}
+        />
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -101,6 +122,15 @@ export function GameControls({
               Spiel beenden
             </DropdownMenuItem>
           </DropdownMenuGroup>
+          {active && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setDateDialogOpen(true)}>
+                <CalendarX2Icon className="size-4" />
+                Datum falsch?
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           {fullscreen ? (
             <DropdownMenuItem onClick={exitFullscreen}>
@@ -116,6 +146,99 @@ export function GameControls({
         </DropdownMenuContent>
       </DropdownMenu>
     </>
+  );
+}
+
+function DateDialog({
+  open,
+  onOpenChange,
+  track,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  track: TrackWithDates;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="gap-4 max-h-[90dvh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Datum falsch?</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4 overflow-y-scroll">
+          <div className="flex flex-col gap-2">
+            <span className="font-semibold">Spotify</span>
+            <div className="flex gap-4 items-center">
+              <img
+                src={track.track.album.images[0]?.url}
+                alt="Spotify Cover"
+                className="size-10 rounded-md"
+              />
+              <div className="flex-1 flex flex-col">
+                <span className="leading-none line-clamp-1 text-ellipsis">
+                  {track.dates.spotify}
+                </span>
+                <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                  {`${track.track.artists.map((ac) => ac.name).join(", ")} - ${track.track.album.name}`}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-semibold">Musicbrainz</span>
+            {track.dates.recordings.map((recording) => (
+              <div key={recording.id} className="flex gap-4 items-center">
+                <div className="size-10 rounded-md bg-muted flex items-center justify-center">
+                  <MusicIcon className="size-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 flex flex-col">
+                  <span className="leading-none line-clamp-1 text-ellipsis">
+                    {recording["first-release-date"]}
+                  </span>
+                  <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                    {`${recording["artist-credit"].map((ac) => ac.name).join(", ")} - ${recording.release.title}`}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-semibold">Discogs</span>
+            {track.dates.masters.map((master) => (
+              <div key={master.id} className="flex gap-4 items-center">
+                {master.thumb ? (
+                  <img
+                    src={master.thumb}
+                    alt="Master Cover Thumbnail"
+                    className="size-10 rounded-md"
+                  />
+                ) : (
+                  <div className="size-10 rounded-md bg-muted flex items-center justify-center">
+                    <MusicIcon className="size-5 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1 flex flex-col">
+                  <span className="leading-none line-clamp-1 text-ellipsis">
+                    {master.year}
+                  </span>
+                  <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                    {master.title}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button variant="secondary" asChild>
+            <a
+              target="_blank"
+              href={`https://duckduckgo.com?q=${encodeURIComponent(track.dates.query)}`}
+            >
+              <SearchIcon className="size-4 mr-2" />
+              {`"${track.dates.query}"`}
+            </a>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

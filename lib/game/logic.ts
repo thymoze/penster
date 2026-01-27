@@ -1,16 +1,21 @@
 import z from "zod";
 import { type Playlist, Track } from "@/lib/spotify/types";
-import { getPlaylistTracks } from "./actions";
+import { getPlaylistTracks, trackDates, type TrackDates } from "./actions";
 
 const GameState = z.object({
   remaining: z.array(z.number()),
   tracks: z.array(Track.nullish().transform((x) => x ?? undefined)),
 });
 
+export type TrackWithDates = {
+  track: Track;
+  dates: TrackDates;
+};
+
 export class GameLogic {
   private tracks: (Track | undefined)[];
   private remaining: number[];
-  private nextIdx: number | undefined;
+  private next: { idx: number; track: TrackWithDates } | undefined;
 
   constructor(private playlist: Playlist) {
     if (typeof window !== "undefined") {
@@ -41,7 +46,7 @@ export class GameLogic {
       { length: this.playlist.tracks.total },
       (_, i) => i,
     );
-    this.nextIdx = undefined;
+    this.next = undefined;
     this.saveState();
   }
 
@@ -52,30 +57,30 @@ export class GameLogic {
     return this.remaining[randomIndex];
   }
 
-  async next(): Promise<Track | undefined> {
-    if (this.nextIdx === undefined && this.remaining.length !== 0) {
+  async nextTrack(): Promise<TrackWithDates | undefined> {
+    if (this.next === undefined && this.remaining.length !== 0) {
       await this.prefetchNext();
     }
-    if (this.nextIdx === undefined) return;
+    if (this.next === undefined) return;
 
-    const track = this.tracks[this.nextIdx];
-    this.remaining = this.remaining.filter((index) => index !== this.nextIdx);
-    this.nextIdx = undefined;
+    const { idx, track } = this.next;
+    this.remaining = this.remaining.filter((index) => index !== idx);
+    this.next = undefined;
     this.saveState();
     return track;
   }
 
   async prefetchNext(): Promise<void> {
-    let i: number | undefined;
+    let idx: number | undefined;
     do {
-      i = this.nextIndex();
-      if (i === undefined) {
-        this.nextIdx = undefined;
+      idx = this.nextIndex();
+      if (idx === undefined) {
+        this.next = undefined;
         return;
       }
 
-      if (this.tracks[i] === undefined) {
-        const offset = Math.floor(i / 50) * 50;
+      if (this.tracks[idx] === undefined) {
+        const offset = Math.floor(idx / 50) * 50;
         const result = await getPlaylistTracks(this.playlist.id, {
           offset,
           limit: 50,
@@ -86,12 +91,14 @@ export class GameLogic {
         const newTracks = result.data.items.map((item) => item.track);
         this.tracks.splice(result.data.offset, newTracks.length, ...newTracks);
       }
-      if (!this.tracks[i]?.is_playable) {
-        this.remaining = this.remaining.filter((index) => index !== i);
+      if (!this.tracks[idx]?.is_playable) {
+        this.remaining = this.remaining.filter((index) => index !== idx);
       }
-    } while (!this.tracks[i]?.is_playable);
+    } while (!this.tracks[idx]?.is_playable);
 
-    this.nextIdx = i;
+    const track = this.tracks[idx] as Track;
+    const dates = await trackDates(track);
+    this.next = { idx, track: { track, dates } };
   }
 
   private saveState() {
@@ -99,7 +106,7 @@ export class GameLogic {
       const state = {
         tracks: this.tracks,
         remaining: this.remaining,
-        nextIdx: this.nextIdx,
+        nextIdx: this.next,
       };
       window.localStorage.setItem(this.playlist.id, JSON.stringify(state));
     }
