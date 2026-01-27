@@ -16,8 +16,11 @@ export type ScrapedSong = {
 
 const limiter = new RateLimiter({ tokensPerInterval: 5, interval: 1000 });
 
-export async function scrapeSongs(title: string, artist: string) {
-  const query = encodeURIComponent(`${title} ${artist}`);
+export async function scrapeSongs(
+  title: string,
+  artists: string[],
+): Promise<ScrapedSong[]> {
+  const query = encodeURIComponent(`${title} ${artists.join(" ")}`);
   try {
     await limiter.removeTokens(1);
     const response = await fetch(

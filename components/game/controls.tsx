@@ -2,6 +2,7 @@
 
 import {
   CalendarX2Icon,
+  CircleAlertIcon,
   CrownIcon,
   EllipsisVerticalIcon,
   ExternalLinkIcon,
@@ -28,15 +29,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Devices, Playlist } from "@/lib/spotify/types";
-import type { RequiredFields } from "@/lib/utils";
+import { cn, type RequiredFields } from "@/lib/utils";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Spinner } from "../ui/spinner";
 import { type Device, DeviceContext } from "./device_context";
 import type { TrackWithDates } from "@/lib/game/logic";
@@ -45,11 +40,13 @@ import Link from "next/link";
 export function GameControls({
   initialPlaylist,
   active,
+  side,
   restartGame,
   abortGame,
 }: {
   initialPlaylist: Playlist;
   active?: TrackWithDates;
+  side: "front" | "back";
   restartGame: () => void;
   abortGame: () => void;
 }) {
@@ -77,11 +74,27 @@ export function GameControls({
     <>
       <DeviceDialog />
       {active && (
-        <DateDialog
-          open={dateDialogOpen}
-          onOpenChange={setDateDialogOpen}
-          track={active}
-        />
+        <>
+          <DateDialog
+            open={dateDialogOpen}
+            onOpenChange={setDateDialogOpen}
+            track={active}
+          />
+          {active.dates.confidence <= 0.5 && side === "back" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "absolute bottom-7 left-1/2 -translate-x-1/2 border-destructive! text-destructive hover:text-destructive",
+                "animate-in fade-in",
+              )}
+              onClick={() => setDateDialogOpen(true)}
+            >
+              <CalendarX2Icon className="size-4" />
+              Datum falsch?
+            </Button>
+          )}
+        </>
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -124,7 +137,7 @@ export function GameControls({
               Spiel beenden
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          {active && (
+          {active && side === "back" && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setDateDialogOpen(true)}>

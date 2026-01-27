@@ -25,6 +25,11 @@ export default function Game({
 
   const [playing, setPlaying] = useState(false);
   const [active, setActive] = useState<TrackWithDates | undefined>(undefined);
+  const [side, setSide] = useState<"front" | "back">("front");
+
+  const reveal = () => {
+    setSide("back");
+  };
 
   const [prefetchPromise, setPrefetchPromise] = useState<
     Promise<void> | undefined
@@ -59,6 +64,7 @@ export default function Game({
   const nextTrack = async () => {
     await prefetchPromise;
     const track = await gameLogic.current.nextTrack();
+    setSide("front");
     setActive(track);
   };
 
@@ -77,6 +83,7 @@ export default function Game({
       <GameControls
         initialPlaylist={initialPlaylist}
         active={active}
+        side={side}
         restartGame={restartGame}
         abortGame={abortGame}
       />
@@ -86,6 +93,8 @@ export default function Game({
             <Wrapper>
               <Player
                 active={active}
+                side={side}
+                reveal={reveal}
                 nextTrack={nextTrack}
                 nextPromise={prefetchPromise}
               />

@@ -14,32 +14,26 @@ import { DeviceContext } from "./device_context";
 import type { TrackWithDates } from "@/lib/game/logic";
 
 export default function Player({
+  side,
   active,
+  reveal,
   nextTrack,
   nextPromise,
 }: {
+  side: "front" | "back";
   active: TrackWithDates;
+  reveal: () => void;
   nextTrack: () => void;
   nextPromise?: Promise<void>;
 }) {
   const { activeDevice } = use(DeviceContext);
 
-  const [side, setSide] = useState<"front" | "back">("front");
   const [isPlaying, setIsPlaying] = useState(true);
-
-  const reveal = () => {
-    setSide("back");
-  };
 
   const togglePlay = async () => {
     if (isPlaying) await pauseAction();
     else await playAction();
     setIsPlaying((isPlaying) => !isPlaying);
-  };
-
-  const next = () => {
-    setSide("front");
-    nextTrack();
   };
 
   useEffect(() => {
@@ -129,7 +123,7 @@ export default function Player({
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-8">
           <Suspense>
             {nextPromise && (
-              <NextButton nextPromise={nextPromise} onClick={next} />
+              <NextButton nextPromise={nextPromise} onClick={nextTrack} />
             )}
           </Suspense>
         </div>

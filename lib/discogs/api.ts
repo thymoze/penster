@@ -25,13 +25,13 @@ const Results = z.object({
 
 export async function searchMasterReleases(
   title: string,
-  artist: string,
+  artists: string[],
 ): Promise<Master[]> {
   const query = new URLSearchParams({
     type: "master",
     per_page: "25",
     track: title,
-    artist: artist,
+    artist: artists.join(" "),
   });
 
   try {

@@ -45,10 +45,10 @@ const limiter = new RateLimiter({ tokensPerInterval: 1, interval: 1000 });
 
 export async function searchRecordings(
   title: string,
-  artist: string,
+  artists: string[],
 ): Promise<Recording[]> {
   const query = new URLSearchParams({
-    query: `recording:${title} AND artistname:${artist} AND status:official AND video:false`,
+    query: `recording:${title} ${artists.map((a) => `AND artistname:${a}`).join(" ")} AND status:official AND video:false`,
     limit: "25",
     fmt: "json",
   });

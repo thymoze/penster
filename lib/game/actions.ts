@@ -45,67 +45,59 @@ export type TrackDates = {
   discogs: Master[];
   allMusic: ScrapedSong[];
   recommendation: number;
+  confidence: number;
 };
 
 export async function searchFields(track: Track) {
-  const artist = track.artists[0]?.name || "";
+  const artists = track.artists.map((artist) => artist.name);
   let title = track.name;
   const dashIndex = title.lastIndexOf(" - ");
   if (dashIndex !== -1) {
     title = title.substring(0, dashIndex).trim();
   }
   title = title.replaceAll(titleRegex, "").trim();
-  return { title, artist };
+  return { title, artists };
 }
 
 export async function trackDates(track: Track): Promise<TrackDates> {
-  const { title, artist } = await searchFields(track);
+  const { title, artists } = await searchFields(track);
 
   const [musicbrainz, discogs, allMusic] = await Promise.all([
-    searchRecordings(title, artist),
-    searchMasterReleases(title, artist),
-    scrapeSongs(title, artist),
+    searchRecordings(title, artists),
+    searchMasterReleases(title, artists),
+    scrapeSongs(title, artists),
   ]);
   const spotify = new Date(track.album.release_date).getFullYear();
 
-  let recommendation: number;
-  if (
-    musicbrainz[0]?.["first-release-date"] === spotify &&
-    discogs[0]?.year === spotify &&
-    allMusic[0]?.year === spotify
-  ) {
-    recommendation = spotify;
-  } else {
-    const arrays = [
-      [spotify],
-      musicbrainz.map((r) => r["first-release-date"]),
-      discogs.map((m) => m.year),
-      allMusic.map((s) => s.year),
-    ];
-    const smallestIn3 = smallestInN(arrays, 3);
-    if (smallestIn3 !== null) {
-      recommendation = smallestIn3;
-    } else {
-      recommendation = Math.min(...arrays.flat());
-    }
+  let recommendation: number | null = null;
+
+  const arrays = [
+    new Set([spotify]),
+    new Set(musicbrainz.map((r) => r["first-release-date"])),
+    new Set(discogs.map((m) => m.year)),
+    new Set(allMusic.map((s) => s.year)),
+  ];
+  let n = 4;
+  while (recommendation === null) {
+    recommendation = smallestInN(arrays, n--);
   }
 
   return {
-    query: `${title} ${artist}`,
+    query: `${title} ${artists[0]}`,
     spotify,
     musicbrainz,
     discogs,
     allMusic,
     recommendation,
+    confidence: (n + 1) / 4,
   };
 }
 
-function smallestInN(arrays: number[][], n: number): number | null {
+function smallestInN(arrays: Set<number>[], n: number): number | null {
   const count = new Map<number, number>();
 
   for (const array of arrays) {
-    const set = new Set(array);
-    for (const num of set) {
+    for (const num of array) {
       count.set(num, (count.get(num) || 0) + 1);
     }
   }
