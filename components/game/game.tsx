@@ -37,8 +37,8 @@ export default function Game({
 
   const startGame = async () => {
     await cookieStore.set("penster_playlist_id", initialPlaylist.id);
-    setPlaying(true);
     await nextTrack();
+    setPlaying(true);
   };
 
   const restartGame = async () => {
