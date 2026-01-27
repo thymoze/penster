@@ -185,60 +185,72 @@ function DateDialog({
           </div>
           <div className="flex flex-col gap-2">
             <span className="font-semibold">Musicbrainz</span>
-            {track.dates.recordings.map((recording) => (
-              <div key={recording.id} className="flex gap-4 items-center">
-                <div className="size-10 rounded-md bg-muted flex items-center justify-center">
-                  <MusicIcon className="size-5 text-muted-foreground" />
-                </div>
-                <div className="flex-1 flex flex-col">
-                  <span className="leading-none line-clamp-1 text-ellipsis">
-                    {recording["first-release-date"]}
-                  </span>
-                  <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
-                    {`${recording["artist-credit"].map((ac) => ac.name).join(", ")} - ${recording.release.title}`}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="font-semibold">Discogs</span>
-            {track.dates.masters.map((master) => (
-              <a
-                target="_blank"
-                href={master.uri}
-                key={master.id}
-                className="flex gap-4 items-center"
-              >
-                {master.thumb ? (
-                  <img
-                    src={master.thumb}
-                    alt="Master Cover Thumbnail"
-                    className="size-10 rounded-md"
-                  />
-                ) : (
+            {track.dates.recordings.length === 0 ? (
+              <span className="text-sm text-muted-foreground">
+                Keine Ergebnisse
+              </span>
+            ) : (
+              track.dates.recordings.map((recording) => (
+                <div key={recording.id} className="flex gap-4 items-center">
                   <div className="size-10 rounded-md bg-muted flex items-center justify-center">
                     <MusicIcon className="size-5 text-muted-foreground" />
                   </div>
-                )}
-                <div className="flex-1 flex flex-col">
-                  <span className="leading-none line-clamp-1 text-ellipsis">
-                    {master.year}
-                  </span>
-                  <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
-                    {master.title}
-                  </span>
+                  <div className="flex-1 flex flex-col">
+                    <span className="leading-none line-clamp-1 text-ellipsis">
+                      {recording["first-release-date"]}
+                    </span>
+                    <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                      {`${recording["artist-credit"].map((ac) => ac.name).join(", ")} - ${recording.release.title}`}
+                    </span>
+                  </div>
                 </div>
-              </a>
-            ))}
+              ))
+            )}
           </div>
-          <Button variant="secondary" asChild>
+          <div className="flex flex-col gap-2">
+            <span className="font-semibold">Discogs</span>
+            {track.dates.masters.length === 0 ? (
+              <span className="text-sm text-muted-foreground">
+                Keine Ergebnisse
+              </span>
+            ) : (
+              track.dates.masters.map((master) => (
+                <a
+                  target="_blank"
+                  href={master.uri}
+                  key={master.id}
+                  className="flex gap-4 items-center"
+                >
+                  {master.thumb ? (
+                    <img
+                      src={master.thumb}
+                      alt="Master Cover Thumbnail"
+                      className="size-10 rounded-md"
+                    />
+                  ) : (
+                    <div className="size-10 rounded-md bg-muted flex items-center justify-center">
+                      <MusicIcon className="size-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 flex flex-col">
+                    <span className="leading-none line-clamp-1 text-ellipsis">
+                      {master.year}
+                    </span>
+                    <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                      {master.title}
+                    </span>
+                  </div>
+                </a>
+              ))
+            )}
+          </div>
+          <Button variant="secondary" asChild className="">
             <a
               target="_blank"
-              href={`https://duckduckgo.com?q=${encodeURIComponent(track.dates.query)}`}
+              href={`https://duckduckgo.com?q=${encodeURIComponent(track.dates.query)}&assist=true`}
             >
               <SearchIcon className="size-4 mr-2" />
-              {`"${track.dates.query}"`}
+              <span className="whitespace-normal text-ellipsis line-clamp-1">{`"${track.dates.query}"`}</span>
             </a>
           </Button>
         </div>
