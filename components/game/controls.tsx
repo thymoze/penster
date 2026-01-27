@@ -164,7 +164,7 @@ function DateDialog({
         <DialogHeader>
           <DialogTitle>Datum falsch?</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4 overflow-y-scroll">
+        <div className="flex flex-col gap-4 overflow-x-hidden overflow-y-auto">
           <div className="flex flex-col gap-2">
             <span className="font-semibold">Spotify</span>
             <div className="flex gap-4 items-center">
@@ -204,7 +204,12 @@ function DateDialog({
           <div className="flex flex-col gap-2">
             <span className="font-semibold">Discogs</span>
             {track.dates.masters.map((master) => (
-              <div key={master.id} className="flex gap-4 items-center">
+              <a
+                target="_blank"
+                href={master.uri}
+                key={master.id}
+                className="flex gap-4 items-center"
+              >
                 {master.thumb ? (
                   <img
                     src={master.thumb}
@@ -224,7 +229,7 @@ function DateDialog({
                     {master.title}
                   </span>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
           <Button variant="secondary" asChild>
