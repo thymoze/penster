@@ -2,7 +2,6 @@
 
 import {
   CalendarX2Icon,
-  CircleAlertIcon,
   CrownIcon,
   EllipsisVerticalIcon,
   ExternalLinkIcon,
@@ -18,6 +17,7 @@ import {
   SpeakerIcon,
   XIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { Suspense, use, useEffect, useState } from "react";
 import {
   DropdownMenu,
@@ -28,14 +28,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { TrackWithDates } from "@/lib/game/logic";
 import type { Devices, Playlist } from "@/lib/spotify/types";
 import { cn, type RequiredFields } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Spinner } from "../ui/spinner";
 import { type Device, DeviceContext } from "./device_context";
-import type { TrackWithDates } from "@/lib/game/logic";
-import Link from "next/link";
 
 export function GameControls({
   initialPlaylist,

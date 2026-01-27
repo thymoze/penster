@@ -7,11 +7,11 @@ import {
   pause as pauseAction,
   play as playAction,
 } from "@/lib/game/actions";
+import type { TrackWithDates } from "@/lib/game/logic";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Card } from "./card";
 import { DeviceContext } from "./device_context";
-import type { TrackWithDates } from "@/lib/game/logic";
 
 export default function Player({
   side,

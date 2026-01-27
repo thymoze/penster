@@ -1,5 +1,5 @@
-import { RateLimiter } from "limiter";
 import * as cheerio from "cheerio";
+import { RateLimiter } from "limiter";
 
 export type ScrapedSong = {
   title: string;

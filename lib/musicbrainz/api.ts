@@ -1,6 +1,6 @@
+import { RateLimiter } from "limiter";
 import z from "zod";
 import { config } from "../config";
-import { RateLimiter } from "limiter";
 import type { RequiredFields } from "../utils";
 
 const BASE_URL = "https://musicbrainz.org/ws/2";

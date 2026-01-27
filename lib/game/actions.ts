@@ -1,10 +1,10 @@
 "use server";
 
 import { type Page, spotifyClient } from "@/lib/spotify/api";
-import type { Track } from "../spotify/types";
-import { type Recording, searchRecordings } from "../musicbrainz/api";
-import { type Master, searchMasterReleases } from "../discogs/api";
 import { type ScrapedSong, scrapeSongs } from "../allmusic/scrape";
+import { type Master, searchMasterReleases } from "../discogs/api";
+import { type Recording, searchRecordings } from "../musicbrainz/api";
+import type { Track } from "../spotify/types";
 
 export async function getDevices() {
   const spotify = await spotifyClient();
