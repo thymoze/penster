@@ -29,7 +29,7 @@ export async function searchMasterReleases(
 ): Promise<Master[]> {
   const query = new URLSearchParams({
     type: "master",
-    per_page: "5",
+    per_page: "25",
     track: title,
     artist: artist,
   });
@@ -43,12 +43,11 @@ export async function searchMasterReleases(
       },
     });
     const data = await response.json();
-    console.log(data);
     const releases = Results.parse(data).results.filter(
       (r): r is Master => !!r.year,
     );
     releases.sort((a, b) => a.year - b.year);
-    return releases;
+    return releases.slice(0, 3);
   } catch (error) {
     console.error("Error fetching Discogs data:", error);
     return [];

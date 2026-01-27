@@ -33,7 +33,7 @@ export default async function Login({ searchParams }: PageProps<"/login">) {
     >
       <Button
         size="lg"
-        className="bg-[#1ed760] hover:bg-[#3be377] text-lg h-12"
+        className="bg-spotify-green hover:bg-spotify-green-hover text-lg h-12"
       >
         Spotify verbinden
       </Button>

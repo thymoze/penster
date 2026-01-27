@@ -2,7 +2,9 @@
 
 import {
   CalendarX2Icon,
+  CrownIcon,
   EllipsisVerticalIcon,
+  ExternalLinkIcon,
   LaptopIcon,
   Maximize2Icon,
   Minimize2Icon,
@@ -164,85 +166,150 @@ function DateDialog({
         <DialogHeader>
           <DialogTitle>Datum falsch?</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4 overflow-x-hidden overflow-y-auto">
-          <div className="flex flex-col gap-2">
-            <span className="font-semibold">Spotify</span>
-            <div className="flex gap-4 items-center">
-              <img
-                src={track.track.album.images[0]?.url}
-                alt="Spotify Cover"
-                className="size-10 rounded-md"
-              />
-              <div className="flex-1 flex flex-col">
-                <span className="leading-none line-clamp-1 text-ellipsis">
-                  {track.dates.spotify}
-                </span>
-                <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
-                  {`${track.track.artists.map((ac) => ac.name).join(", ")} - ${track.track.album.name}`}
-                </span>
+        <div className="flex flex-col gap-4 overflow-hidden">
+          <div className="flex flex-col gap-4 overflow-x-hidden overflow-y-auto">
+            <div className="flex flex-col gap-2">
+              <span className="font-semibold">Spotify</span>
+              <div className="flex gap-4 items-center">
+                <img
+                  src={track.track.album.images[0]?.url}
+                  alt="Spotify Cover"
+                  className="size-10 rounded-md"
+                />
+                <div className="flex-1 flex flex-col">
+                  <span className="leading-none line-clamp-1 text-ellipsis">
+                    {track.dates.spotify}
+                  </span>
+                  <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                    {`${track.track.artists.map((ac) => ac.name).join(", ")} - ${track.track.album.name}`}
+                  </span>
+                </div>
+                {track.dates.spotify === track.dates.recommendation && (
+                  <CrownIcon className="size-4 text-yellow-500" />
+                )}
               </div>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="font-semibold">Musicbrainz</span>
-            {track.dates.recordings.length === 0 ? (
-              <span className="text-sm text-muted-foreground">
-                Keine Ergebnisse
-              </span>
-            ) : (
-              track.dates.recordings.map((recording) => (
-                <div key={recording.id} className="flex gap-4 items-center">
-                  <div className="size-10 rounded-md bg-muted flex items-center justify-center">
-                    <MusicIcon className="size-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 flex flex-col">
-                    <span className="leading-none line-clamp-1 text-ellipsis">
-                      {recording["first-release-date"]}
-                    </span>
-                    <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
-                      {`${recording["artist-credit"].map((ac) => ac.name).join(", ")} - ${recording.release.title}`}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="font-semibold">Discogs</span>
-            {track.dates.masters.length === 0 ? (
-              <span className="text-sm text-muted-foreground">
-                Keine Ergebnisse
-              </span>
-            ) : (
-              track.dates.masters.map((master) => (
-                <a
-                  target="_blank"
-                  href={master.uri}
-                  key={master.id}
-                  className="flex gap-4 items-center"
-                >
-                  {master.thumb ? (
-                    <img
-                      src={master.thumb}
-                      alt="Master Cover Thumbnail"
-                      className="size-10 rounded-md"
-                    />
-                  ) : (
-                    <div className="size-10 rounded-md bg-muted flex items-center justify-center">
-                      <MusicIcon className="size-5 text-muted-foreground" />
+            <div className="flex flex-col gap-2">
+              <span className="font-semibold">Musicbrainz</span>
+              {track.dates.musicbrainz.length === 0 ? (
+                <span className="text-sm text-muted-foreground">
+                  Keine Ergebnisse
+                </span>
+              ) : (
+                track.dates.musicbrainz.map((recording) => (
+                  <a
+                    target="_blank"
+                    href={recording.uri}
+                    key={recording.id}
+                    className="flex gap-4 items-center"
+                  >
+                    {recording.release.thumb ? (
+                      <img
+                        src={recording.release.thumb}
+                        alt="Recording Cover Thumbnail"
+                        className="size-10 rounded-md"
+                      />
+                    ) : (
+                      <div className="size-10 rounded-md bg-muted flex items-center justify-center">
+                        <MusicIcon className="size-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 flex flex-col">
+                      <span className="leading-none line-clamp-1 text-ellipsis">
+                        {recording["first-release-date"]}
+                      </span>
+                      <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                        {`${recording["artist-credit"].map((ac) => ac.name).join(", ")} - ${recording.release.title}`}
+                      </span>
                     </div>
-                  )}
-                  <div className="flex-1 flex flex-col">
-                    <span className="leading-none line-clamp-1 text-ellipsis">
-                      {master.year}
-                    </span>
-                    <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
-                      {master.title}
-                    </span>
-                  </div>
-                </a>
-              ))
-            )}
+                    {recording["first-release-date"] ===
+                      track.dates.recommendation && (
+                      <CrownIcon className="size-4 text-yellow-500" />
+                    )}
+                  </a>
+                ))
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="font-semibold">Discogs</span>
+              {track.dates.discogs.length === 0 ? (
+                <span className="text-sm text-muted-foreground">
+                  Keine Ergebnisse
+                </span>
+              ) : (
+                track.dates.discogs.map((master) => (
+                  <a
+                    target="_blank"
+                    href={master.uri}
+                    key={master.id}
+                    className="flex gap-4 items-center"
+                  >
+                    {master.thumb ? (
+                      <img
+                        src={master.thumb}
+                        alt="Master Cover Thumbnail"
+                        className="size-10 rounded-md"
+                      />
+                    ) : (
+                      <div className="size-10 rounded-md bg-muted flex items-center justify-center">
+                        <MusicIcon className="size-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 flex flex-col">
+                      <span className="leading-none line-clamp-1 text-ellipsis">
+                        {master.year}
+                      </span>
+                      <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                        {master.title}
+                      </span>
+                    </div>
+                    {master.year === track.dates.recommendation && (
+                      <CrownIcon className="size-4 text-yellow-500" />
+                    )}
+                  </a>
+                ))
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="font-semibold">AllMusic</span>
+              {track.dates.allMusic.length === 0 ? (
+                <span className="text-sm text-muted-foreground">
+                  Keine Ergebnisse
+                </span>
+              ) : (
+                track.dates.allMusic.map((song) => (
+                  <a
+                    target="_blank"
+                    href={song.uri}
+                    key={song.uri}
+                    className="flex gap-4 items-center"
+                  >
+                    {song.release?.cover ? (
+                      <img
+                        src={song.release.cover}
+                        alt="Release Cover Thumbnail"
+                        className="size-10 rounded-md"
+                      />
+                    ) : (
+                      <div className="size-10 rounded-md bg-muted flex items-center justify-center">
+                        <MusicIcon className="size-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 flex flex-col">
+                      <span className="leading-none line-clamp-1 text-ellipsis">
+                        {song.year}
+                      </span>
+                      <span className="text-sm text-muted-foreground line-clamp-1 text-ellipsis">
+                        {`${song.artist} - ${song.release?.name || song.title}`}
+                      </span>
+                    </div>
+                    {song.year === track.dates.recommendation && (
+                      <CrownIcon className="size-4 text-yellow-500" />
+                    )}
+                  </a>
+                ))
+              )}
+            </div>
           </div>
           <Button variant="secondary" asChild className="">
             <a
@@ -289,6 +356,17 @@ function DeviceDialog() {
                 <DeviceLabel device={device} />
               </Button>
             ))}
+        </div>
+        <div className="flex flex-col gap-2 ">
+          <span className="text-sm text-muted-foreground">
+            Gerät nicht gefunden?
+          </span>
+          <Button variant="outline" asChild>
+            <Link href="spotify://" target="_blank">
+              <ExternalLinkIcon className="size-4 text-spotify-green" />
+              Spotify öffnen
+            </Link>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

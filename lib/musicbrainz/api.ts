@@ -8,6 +8,7 @@ const BASE_URL = "https://musicbrainz.org/ws/2";
 const RecordingResponse = z.object({
   id: z.string(),
   title: z.string(),
+  score: z.number().optional(),
   "artist-credit": z.array(
     z.object({
       name: z.string(),
@@ -31,7 +32,9 @@ export type Recording = Omit<
   release: {
     id: string;
     title: string;
+    thumb?: string;
   };
+  uri: string;
 };
 
 const Recordings = z.object({
@@ -46,7 +49,7 @@ export async function searchRecordings(
 ): Promise<Recording[]> {
   const query = new URLSearchParams({
     query: `recording:${title} AND artistname:${artist} AND status:official AND video:false`,
-    limit: "5",
+    limit: "25",
     fmt: "json",
   });
 
@@ -60,26 +63,46 @@ export async function searchRecordings(
     });
 
     const data = await response.json();
-    const recordings = Recordings.parse(data).recordings.filter(
-      (r): r is RequiredFields<RecordingResponse, "first-release-date"> =>
-        !!r["first-release-date"],
-    );
+    const recordings = Recordings.parse(data)
+      .recordings.filter(
+        (r): r is RequiredFields<RecordingResponse, "first-release-date"> =>
+          !!r["first-release-date"],
+      )
+      .filter((r) => (r.score ?? 0) > 75);
 
-    const recordingsWithRelease = recordings.map((r) => {
-      const release =
-        r.releases.find((rel) => rel.date === r["first-release-date"]) ??
-        r.releases[0];
-      return {
-        ...r,
-        "first-release-date": new Date(r["first-release-date"]).getFullYear(),
-        release,
-      } satisfies Recording;
-    });
+    const recordingsWithRelease = await Promise.all(
+      recordings.map(async (r) => {
+        const release =
+          r.releases.find((rel) => rel.date === r["first-release-date"]) ??
+          r.releases[0];
+
+        let thumb: string | undefined =
+          `https://coverartarchive.org/release/${release.id}/front-250`;
+        try {
+          const response = await fetch(thumb, { method: "HEAD" });
+          if (!response.ok) {
+            thumb = undefined;
+          }
+        } catch {
+          thumb = undefined;
+        }
+
+        return {
+          ...r,
+          "first-release-date": new Date(r["first-release-date"]).getFullYear(),
+          release: {
+            ...release,
+            thumb,
+          },
+          uri: `https://musicbrainz.org/recording/${r.id}`,
+        } satisfies Recording;
+      }),
+    );
 
     recordingsWithRelease.sort(
       (a, b) => a["first-release-date"] - b["first-release-date"],
     );
-    return recordingsWithRelease;
+    return recordingsWithRelease.slice(0, 3);
   } catch (error) {
     console.error("Error fetching release data:", error);
     return [];
