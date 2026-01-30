@@ -1,7 +1,7 @@
 "use client";
 
 import { CirclePauseIcon, CirclePlayIcon } from "lucide-react";
-import { Suspense, use, useEffect, useState } from "react";
+import { Suspense, use, useEffect, useRef, useState } from "react";
 import { pause as pauseAction, play as playAction } from "@/lib/game/actions";
 import type { TrackWithDates } from "@/lib/game/logic";
 import { cn } from "@/lib/utils";
@@ -25,12 +25,29 @@ export default function Player({
 }) {
   const { activeDevice } = use(DeviceContext);
 
+  const [playbackState, setPlaybackState] = useState<PlaybackState | null>(
+    null,
+  );
   const [isPlaying, setIsPlaying] = useState(true);
+  const lastToggle = useRef(0);
 
   const togglePlay = async () => {
-    if (isPlaying) await pauseAction();
-    else await playAction();
+    lastToggle.current = Date.now();
     setIsPlaying((isPlaying) => !isPlaying);
+    if (isPlaying) await pauseAction();
+    else
+      await playAction(
+        !!playbackState?.item?.id && playbackState.item.id !== active.track.id
+          ? active.track.id
+          : undefined,
+      );
+  };
+
+  const next = () => {
+    setIsPlaying(true);
+    setPlaybackState(null);
+    lastToggle.current = Date.now();
+    nextTrack();
   };
 
   useEffect(() => {
@@ -41,13 +58,17 @@ export default function Player({
         const response = await fetch("/api/playbackState");
         if (!response.ok) return;
         const playbackState = (await response.json()) as PlaybackState;
-        setIsPlaying(playbackState.is_playing);
+        setPlaybackState(playbackState);
+
+        if (Date.now() - lastToggle.current > 2000) {
+          setIsPlaying(playbackState.is_playing);
+        }
       } catch {}
     };
 
-    const interval = setInterval(fn, 5000);
+    const interval = setInterval(fn, isPlaying ? 2000 : 5000);
     return () => clearInterval(interval);
-  }, [activeDevice]);
+  }, [isPlaying, activeDevice]);
 
   useEffect(() => {
     let sentinel: WakeLockSentinel | null = null;
@@ -151,7 +172,7 @@ export default function Player({
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-8">
           <Suspense>
             {nextPromise && (
-              <NextButton nextPromise={nextPromise} onClick={nextTrack} />
+              <NextButton nextPromise={nextPromise} onClick={next} />
             )}
           </Suspense>
         </div>

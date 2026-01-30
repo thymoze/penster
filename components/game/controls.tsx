@@ -106,7 +106,12 @@ export function GameControls({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-3xs md:w-xs lg:w-sm">
-          <div className="flex items-center justify-start gap-2 p-1">
+          <a
+            className="flex items-center justify-start gap-2 p-1 hover:bg-muted rounded-sm"
+            href={`spotify://playlist/${initialPlaylist.id}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             <img
               src={initialPlaylist.images[0]?.url}
               alt="Playlist Cover"
@@ -120,7 +125,7 @@ export function GameControls({
                 {initialPlaylist.tracks.total} Titel
               </span>
             </div>
-          </div>
+          </a>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DeviceMenu />
@@ -207,6 +212,7 @@ function DateDialog({
                 track.dates.musicbrainz.map((recording) => (
                   <a
                     target="_blank"
+                    rel="noreferrer"
                     href={recording.uri}
                     key={recording.id}
                     className="flex gap-4 items-center"
@@ -244,6 +250,7 @@ function DateDialog({
                 track.dates.discogs.map((master) => (
                   <a
                     target="_blank"
+                    rel="noreferrer"
                     href={master.uri}
                     key={master.id}
                     className="flex gap-4 items-center"
@@ -280,6 +287,7 @@ function DateDialog({
                 track.dates.allMusic.map((song) => (
                   <a
                     target="_blank"
+                    rel="noreferrer"
                     href={song.uri}
                     key={song.uri}
                     className="flex gap-4 items-center"
@@ -310,6 +318,7 @@ function DateDialog({
           <Button variant="secondary" asChild className="">
             <a
               target="_blank"
+              rel="noreferrer"
               href={`https://duckduckgo.com?q=${encodeURIComponent(track.dates.query)}&assist=true`}
             >
               <SearchIcon className="size-4 mr-2" />
