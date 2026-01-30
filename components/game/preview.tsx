@@ -10,7 +10,7 @@ export function GamePreview({
   startGame,
 }: {
   initialPlaylist: Playlist;
-  startGame: () => void;
+  startGame: () => Promise<void>;
 }) {
   const { activeDevice } = use(DeviceContext);
   const [starting, setStarting] = useTransition();
@@ -21,7 +21,7 @@ export function GamePreview({
         new Promise((resolve) =>
           setTimeout(async () => {
             await document.documentElement.requestFullscreen();
-            startGame();
+            await startGame();
             resolve();
           }, 1200),
         ),
