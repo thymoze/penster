@@ -46,6 +46,7 @@ const limiter = new RateLimiter({ tokensPerInterval: 1, interval: 1000 });
 export async function searchRecordings(
   title: string,
   artists: string[],
+  signal?: AbortSignal,
 ): Promise<Recording[]> {
   const query = new URLSearchParams({
     query: `recording:${title} AND artistname:${artists[0]} AND status:official AND video:false`,
@@ -60,6 +61,7 @@ export async function searchRecordings(
         Accept: "application/json",
         "User-Agent": config.userAgent,
       },
+      signal,
     });
 
     const data = await response.json();
@@ -76,23 +78,12 @@ export async function searchRecordings(
           r.releases.find((rel) => rel.date === r["first-release-date"]) ??
           r.releases[0];
 
-        let thumb: string | undefined =
-          `https://coverartarchive.org/release/${release.id}/front-250`;
-        try {
-          const response = await fetch(thumb, { method: "HEAD" });
-          if (!response.ok) {
-            thumb = undefined;
-          }
-        } catch {
-          thumb = undefined;
-        }
-
         return {
           ...r,
           "first-release-date": new Date(r["first-release-date"]).getFullYear(),
           release: {
             ...release,
-            thumb,
+            thumb: `https://coverartarchive.org/release/${release.id}/front-250`,
           },
           uri: `https://musicbrainz.org/recording/${r.id}`,
         } satisfies Recording;
@@ -104,7 +95,7 @@ export async function searchRecordings(
     );
     return recordingsWithRelease.slice(0, 3);
   } catch (error) {
-    console.error("Error fetching release data:", error);
+    console.error("Error fetching musicbrainz data:", error);
     return [];
   }
 }

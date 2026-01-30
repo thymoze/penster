@@ -29,10 +29,11 @@ export async function searchFields(track: Track) {
 export async function trackDates(track: Track): Promise<TrackDates> {
   const { title, artists } = await searchFields(track);
 
+  const timeoutSignal = AbortSignal.timeout(5000);
   const [musicbrainz, discogs, allMusic] = await Promise.all([
-    searchRecordings(title, artists),
-    searchMasterReleases(title, artists),
-    scrapeSongs(title, artists),
+    searchRecordings(title, artists, timeoutSignal),
+    searchMasterReleases(title, artists, timeoutSignal),
+    scrapeSongs(title, artists, timeoutSignal),
   ]);
   const spotify = new Date(track.album.release_date).getFullYear();
 

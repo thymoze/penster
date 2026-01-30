@@ -20,7 +20,6 @@ export function GamePreview({
       () =>
         new Promise((resolve) =>
           setTimeout(async () => {
-            await document.documentElement.requestFullscreen();
             await startGame();
             resolve();
           }, 1200),
@@ -57,7 +56,7 @@ export function GamePreview({
             "absolute size-full object-cover rounded-md backface-hidden",
           )}
         />
-        <Card className="rotate-y-180" />
+        <Card className="rotate-y-180 animate-pulse" />
       </div>
 
       <div className="absolute w-full sm:w-[150%] top-full left-1/2 -translate-x-1/2 mt-8 flex flex-col items-center gap-4">

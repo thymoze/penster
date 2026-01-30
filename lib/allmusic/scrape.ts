@@ -19,12 +19,14 @@ const limiter = new RateLimiter({ tokensPerInterval: 5, interval: 1000 });
 export async function scrapeSongs(
   title: string,
   artists: string[],
+  signal?: AbortSignal,
 ): Promise<ScrapedSong[]> {
   const query = encodeURIComponent(`${title} ${artists[0]}`);
   try {
     await limiter.removeTokens(1);
     const response = await fetch(
       `https://www.allmusic.com/search/songs/${query}`,
+      { signal },
     );
     const html = await response.text();
     const $ = cheerio.load(html);
@@ -41,7 +43,7 @@ export async function scrapeSongs(
     await limiter.removeTokens(songLinks.length);
     const songs = await Promise.all(
       songLinks.map(async (link) => {
-        const res = await fetch(link);
+        const res = await fetch(link, { signal });
         const songHtml = await res.text();
         const $$ = cheerio.load(songHtml);
         const song = $$.extract({

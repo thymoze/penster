@@ -26,6 +26,7 @@ const Results = z.object({
 export async function searchMasterReleases(
   title: string,
   artists: string[],
+  signal?: AbortSignal,
 ): Promise<Master[]> {
   const query = new URLSearchParams({
     type: "master",
@@ -41,6 +42,7 @@ export async function searchMasterReleases(
         "User-Agent": config.userAgent,
         Authorization: `Discogs key=${config.discogsKey}, secret=${config.discogsSecret}`,
       },
+      signal,
     });
     const data = await response.json();
     const releases = Results.parse(data).results.filter(

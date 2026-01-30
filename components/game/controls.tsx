@@ -183,11 +183,7 @@ function DateDialog({
             <div className="flex flex-col gap-2">
               <span className="font-semibold">Spotify</span>
               <div className="flex gap-4 items-center">
-                <img
-                  src={track.track.album.images[0]?.url}
-                  alt="Spotify Cover"
-                  className="size-10 rounded-md"
-                />
+                <CoverWithFallback url={track.track.album.images[0]?.url} />
                 <div className="flex-1 flex flex-col">
                   <span className="leading-none line-clamp-1 text-ellipsis">
                     {track.dates.spotify}
@@ -216,11 +212,7 @@ function DateDialog({
                     className="flex gap-4 items-center"
                   >
                     {recording.release.thumb ? (
-                      <img
-                        src={recording.release.thumb}
-                        alt="Recording Cover Thumbnail"
-                        className="size-10 rounded-md"
-                      />
+                      <CoverWithFallback url={recording.release.thumb} />
                     ) : (
                       <div className="size-10 rounded-md bg-muted flex items-center justify-center">
                         <MusicIcon className="size-5 text-muted-foreground" />
@@ -257,11 +249,7 @@ function DateDialog({
                     className="flex gap-4 items-center"
                   >
                     {master.thumb ? (
-                      <img
-                        src={master.thumb}
-                        alt="Master Cover Thumbnail"
-                        className="size-10 rounded-md"
-                      />
+                      <CoverWithFallback url={master.thumb} />
                     ) : (
                       <div className="size-10 rounded-md bg-muted flex items-center justify-center">
                         <MusicIcon className="size-5 text-muted-foreground" />
@@ -297,11 +285,7 @@ function DateDialog({
                     className="flex gap-4 items-center"
                   >
                     {song.release?.cover ? (
-                      <img
-                        src={song.release.cover}
-                        alt="Release Cover Thumbnail"
-                        className="size-10 rounded-md"
-                      />
+                      <CoverWithFallback url={song.release.cover} />
                     ) : (
                       <div className="size-10 rounded-md bg-muted flex items-center justify-center">
                         <MusicIcon className="size-5 text-muted-foreground" />
@@ -335,6 +319,27 @@ function DateDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CoverWithFallback({ url }: { url: string }) {
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return (
+      <div className="size-10 rounded-md bg-muted flex items-center justify-center">
+        <MusicIcon className="size-5 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={url}
+      alt="Cover Thumbnail"
+      className="size-10 rounded-md"
+      onError={() => setError(true)}
+    />
   );
 }
 

@@ -36,8 +36,11 @@ export default function Game({
   >(undefined);
 
   const startGame = async () => {
-    await cookieStore.set("penster_playlist_id", initialPlaylist.id);
-    await nextTrack();
+    await Promise.all([
+      nextTrack(),
+      document.documentElement.requestFullscreen(),
+      cookieStore.set("penster_playlist_id", initialPlaylist.id),
+    ]);
     setPlaying(true);
   };
 
