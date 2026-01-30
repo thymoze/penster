@@ -29,12 +29,8 @@ export default async function GamePage({ searchParams }: PageProps<"/play">) {
   ]);
 
   return (
-    <div className="bg-card">
-      <main className="max-w-7xl mx-auto min-h-dvh flex flex-col p-4 pb-12 relative">
-        <DeviceProvider initialDevices={devices}>
-          <Game initialPlaylist={playlist} />
-        </DeviceProvider>
-      </main>
-    </div>
+    <DeviceProvider initialDevices={devices}>
+      <Game initialPlaylist={playlist} />
+    </DeviceProvider>
   );
 }

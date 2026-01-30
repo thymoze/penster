@@ -48,7 +48,7 @@ export async function searchRecordings(
   artists: string[],
 ): Promise<Recording[]> {
   const query = new URLSearchParams({
-    query: `recording:${title} ${artists.map((a) => `AND artistname:${a}`).join(" ")} AND status:official AND video:false`,
+    query: `recording:${title} AND artistname:${artists[0]} AND status:official AND video:false`,
     limit: "25",
     fmt: "json",
   });

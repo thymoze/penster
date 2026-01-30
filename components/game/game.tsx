@@ -10,6 +10,7 @@ import { Button } from "../ui/button";
 import { GameControls } from "./controls";
 import Player from "./player";
 import { GamePreview } from "./preview";
+import { Wrapper } from "./card";
 
 export default function Game({
   initialPlaylist,
@@ -123,13 +124,5 @@ export default function Game({
         )}
       </div>
     </>
-  );
-}
-
-function Wrapper({ children }: { children: ReactNode }) {
-  return (
-    <div className="relative group w-10/12 sm:size-96 aspect-square perspective-distant">
-      {children}
-    </div>
   );
 }

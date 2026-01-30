@@ -31,7 +31,7 @@ export async function searchMasterReleases(
     type: "master",
     per_page: "25",
     track: title,
-    artist: artists.join(" "),
+    artist: artists[0],
   });
 
   try {

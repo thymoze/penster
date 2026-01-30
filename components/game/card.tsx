@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
 
 export function Card({
   children,
@@ -11,6 +12,14 @@ export function Card({
         className,
       )}
     >
+      {children}
+    </div>
+  );
+}
+
+export function Wrapper({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative group w-10/12 sm:size-96 aspect-square perspective-distant">
       {children}
     </div>
   );

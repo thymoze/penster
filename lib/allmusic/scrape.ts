@@ -20,7 +20,7 @@ export async function scrapeSongs(
   title: string,
   artists: string[],
 ): Promise<ScrapedSong[]> {
-  const query = encodeURIComponent(`${title} ${artists.join(" ")}`);
+  const query = encodeURIComponent(`${title} ${artists[0]}`);
   try {
     await limiter.removeTokens(1);
     const response = await fetch(
