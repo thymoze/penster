@@ -2,16 +2,13 @@
 
 import { CirclePauseIcon, CirclePlayIcon } from "lucide-react";
 import { Suspense, use, useEffect, useState } from "react";
-import {
-  getPlaybackState,
-  pause as pauseAction,
-  play as playAction,
-} from "@/lib/game/actions";
+import { pause as pauseAction, play as playAction } from "@/lib/game/actions";
 import type { TrackWithDates } from "@/lib/game/logic";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Card } from "./card";
 import { DeviceContext } from "./device_context";
+import type { PlaybackState } from "@/lib/spotify/types";
 
 export default function Player({
   side,
@@ -40,9 +37,12 @@ export default function Player({
     if (!activeDevice) return;
 
     const fn = async () => {
-      const result = await getPlaybackState();
-      if (!result.success) return;
-      setIsPlaying(result.data.is_playing);
+      try {
+        const response = await fetch("/api/playbackState");
+        if (!response.ok) return;
+        const playbackState = (await response.json()) as PlaybackState;
+        setIsPlaying(playbackState.is_playing);
+      } catch {}
     };
 
     const interval = setInterval(fn, 5000);

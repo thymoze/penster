@@ -1,6 +1,6 @@
 import z from "zod";
-import { type Playlist, Track } from "@/lib/spotify/types";
-import { getPlaylistTracks, type TrackDates, trackDates } from "./actions";
+import { type Playlist, Track, TracksResponse } from "@/lib/spotify/types";
+import { TrackDates } from "./trackDates";
 
 const GameState = z.object({
   remaining: z.array(z.number()),
@@ -81,15 +81,18 @@ export class GameLogic {
 
       if (this.tracks[idx] === undefined) {
         const offset = Math.floor(idx / 50) * 50;
-        const result = await getPlaylistTracks(this.playlist.id, {
-          offset,
-          limit: 50,
+        const params = new URLSearchParams({
+          playlistId: this.playlist.id,
+          offset: offset.toString(),
+          limit: "50",
         });
-        if (!result.success) {
+        const response = await fetch(`/api/playlistTracks?${params}`);
+        if (!response.ok) {
           throw new Error("Failed to fetch tracks");
         }
-        const newTracks = result.data.items.map((item) => item.track);
-        this.tracks.splice(result.data.offset, newTracks.length, ...newTracks);
+        const tracks = (await response.json()) as TracksResponse;
+        const newTracks = tracks.items.map((item) => item.track);
+        this.tracks.splice(tracks.offset, newTracks.length, ...newTracks);
       }
       if (!this.tracks[idx]?.is_playable) {
         this.remaining = this.remaining.filter((index) => index !== idx);
@@ -97,7 +100,17 @@ export class GameLogic {
     } while (!this.tracks[idx]?.is_playable);
 
     const track = this.tracks[idx] as Track;
-    const dates = await trackDates(track);
+    const res = await fetch("/api/trackDates", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(track),
+    });
+    if (!res.ok) {
+      throw new Error("Failed to fetch track dates");
+    }
+    const dates = (await res.json()) as TrackDates;
     this.next = { idx, track: { track, dates } };
   }
 

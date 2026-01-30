@@ -2,7 +2,7 @@
 
 import { RotateCcwIcon, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { pause, play } from "@/lib/game/actions";
 import { GameLogic, type TrackWithDates } from "@/lib/game/logic";
 import type { Playlist } from "@/lib/spotify/types";

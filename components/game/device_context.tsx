@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import type { Result } from "@/lib";
-import { getDevices, setDevice } from "@/lib/game/actions";
+import { setDevice } from "@/lib/game/actions";
 import type { Devices } from "@/lib/spotify/types";
 import type { RequiredFields } from "@/lib/utils";
 
@@ -31,14 +31,19 @@ export const DeviceContext = createContext<DeviceContextType>({
 export type Device = RequiredFields<Devices["devices"][number], "id">;
 
 async function fetchDevices(): Promise<Device[]> {
-  const res = await getDevices();
-  if (!res.success) {
-    throw new Error("Failed to fetch devices");
+  try {
+    const res = await fetch("/api/devices");
+    if (!res.ok) {
+      throw new Error("Failed to fetch devices");
+    }
+    const devices = (await res.json()) as Devices;
+    return devices.devices.filter(
+      (device): device is RequiredFields<Devices["devices"][number], "id"> =>
+        device.id !== null,
+    );
+  } catch {
+    return [];
   }
-  return res.data.devices.filter(
-    (device): device is RequiredFields<Devices["devices"][number], "id"> =>
-      device.id !== null,
-  );
 }
 
 export function DeviceProvider({
