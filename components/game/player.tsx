@@ -49,6 +49,34 @@ export default function Player({
     return () => clearInterval(interval);
   }, [activeDevice]);
 
+  useEffect(() => {
+    let sentinel: WakeLockSentinel | null = null;
+
+    const fn = async () => {
+      try {
+        if (isPlaying) {
+          sentinel = await navigator.wakeLock.request("screen");
+        } else {
+          await sentinel?.release();
+          sentinel = null;
+        }
+      } catch {}
+    };
+
+    const visibilityChangeHandler = async () => {
+      if (document.visibilityState === "visible") {
+        fn();
+      }
+    };
+    document.addEventListener("visibilitychange", visibilityChangeHandler);
+
+    fn();
+    return () => {
+      document.removeEventListener("visibilitychange", visibilityChangeHandler);
+      sentinel?.release();
+    };
+  }, [isPlaying]);
+
   return (
     <>
       <div
